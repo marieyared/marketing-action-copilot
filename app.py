@@ -139,6 +139,20 @@ def build_so_what(trend, projected_spend, monthly_budget, days_remaining):
 # PDF export
 # =============================================================================
 
+def pdf_safe(text):
+    """Replace characters unsupported by fpdf2 core fonts."""
+    return (
+        str(text)
+        .replace("\u20ac", "EUR ")   # euro sign €
+        .replace("\u2014", "-")      # em dash
+        .replace("\u2013", "-")      # en dash
+        .replace("\u2019", "'")      # curly apostrophe
+        .replace("\u2018", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+    )
+
+
 def generate_pdf(so_what, trend, spent_to_date, projected_spend,
                  monthly_budget, days_elapsed, days_remaining,
                  projected_roas, daily_spend_rate):
@@ -167,7 +181,7 @@ def generate_pdf(so_what, trend, spent_to_date, projected_spend,
     pdf.cell(0, 7, "Summary", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(52, 55, 71)
-    pdf.multi_cell(0, 6, so_what)
+    pdf.multi_cell(pdf.epw, 6, pdf_safe(so_what), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(6)
 
     # Budget section
@@ -186,7 +200,7 @@ def generate_pdf(so_what, trend, spent_to_date, projected_spend,
         f"Days remaining: {days_remaining}",
     ]
     for line in budget_lines:
-        pdf.cell(0, 6, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 6, pdf_safe(line), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(6)
 
     # Channel signals
@@ -213,7 +227,7 @@ def generate_pdf(so_what, trend, spent_to_date, projected_spend,
         pdf.cell(0, 6, row["signal"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(80, 80, 80)
-        pdf.multi_cell(0, 5, row["signal_note"])
+        pdf.multi_cell(pdf.epw, 5, pdf_safe(row["signal_note"]), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
         # Mini metrics row
         pdf.set_font("Helvetica", "", 8)
@@ -224,7 +238,7 @@ def generate_pdf(so_what, trend, spent_to_date, projected_spend,
             f"ROAS change: {pct_text(row.get('roas_delta_pct', np.nan))}",
             f"CAC change: {pct_text(row.get('cac_delta_pct', np.nan))}",
         ]
-        pdf.cell(0, 5, "   |   ".join(cols), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.cell(0, 5, pdf_safe("   |   ".join(cols)), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
     # Footer
     pdf.ln(8)
