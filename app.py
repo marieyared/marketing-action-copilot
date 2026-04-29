@@ -376,7 +376,7 @@ def color_delta(val):
 
 styled_trend = (
     display_trend.style
-    .applymap(color_delta, subset=["ROAS Δ %"])
+    .map(color_delta, subset=["ROAS Δ %"])
     .format({
         "ROAS prior 7d": lambda v: fmt_x(v),
         "ROAS last 7d":  lambda v: fmt_x(v),
