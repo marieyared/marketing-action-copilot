@@ -3,8 +3,10 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from io import StringIO
+from io import StringIO, BytesIO
 from datetime import timedelta
+from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 st.set_page_config(page_title="Budget Pulse", layout="wide")
 
@@ -17,67 +19,226 @@ def safe_div(num, den):
     return np.where(den != 0, num / den, np.nan)
 
 def fmt_eur(x):
-    if pd.isna(x):
-        return "N/A"
+    if pd.isna(x): return "N/A"
     return f"€{x:,.0f}"
 
 def fmt_x(x):
-    if pd.isna(x):
-        return "N/A"
+    if pd.isna(x): return "N/A"
     return f"{x:.2f}x"
 
 def pct_text(x):
-    if pd.isna(x):
-        return "N/A"
+    if pd.isna(x): return "N/A"
     return f"{x:+.1f}%"
 
 def signal_label(row):
     rd = row.get("roas_delta_pct", np.nan)
-    cd = row.get("cac_delta_pct", np.nan)
-    if pd.isna(rd) and pd.isna(cd):
-        return "Not enough data"
-    if not pd.isna(rd) and rd <= -25:
-        return "Efficiency weakening"
-    if not pd.isna(cd) and cd >= 45:
-        return "Acquisition cost rising"
-    if not pd.isna(rd) and rd <= -10:
-        return "ROAS slightly down"
+    cd = row.get("cac_delta_pct",  np.nan)
+    if pd.isna(rd) and pd.isna(cd):       return "Not enough data"
+    if not pd.isna(rd) and rd <= -25:     return "Efficiency weakening"
+    if not pd.isna(cd) and cd >= 45:      return "Acquisition cost rising"
+    if not pd.isna(rd) and rd <= -10:     return "ROAS slightly down"
     return "Stable"
 
 def signal_note(row):
-    label   = row["signal"]
-    ch      = row["channel"]
-    rd      = row.get("roas_delta_pct", np.nan)
-    rev_curr = row.get("revenue_curr", np.nan)
-    rev_prev = row.get("revenue_prev", np.nan)
-    cac_curr = row.get("cac_curr", np.nan)
-    daily_sp = row.get("daily_spend_curr", np.nan)
+    label    = row["signal"]
+    ch       = row["channel"]
+    rd       = row.get("roas_delta_pct", np.nan)
+    rev_curr = row.get("revenue_curr",   np.nan)
+    rev_prev = row.get("revenue_prev",   np.nan)
+    cac_curr = row.get("cac_curr",       np.nan)
 
     if label == "Efficiency weakening":
         rev_diff = rev_curr - rev_prev if not (pd.isna(rev_curr) or pd.isna(rev_prev)) else np.nan
-        diff_str = f" That is {fmt_eur(abs(rev_diff))} less revenue generated last week than the week before, at the same spend level." if not pd.isna(rev_diff) else ""
+        diff_str = (
+            f" That is {fmt_eur(abs(rev_diff))} less revenue generated last week "
+            f"than the week before, at the same spend level."
+        ) if not pd.isna(rev_diff) else ""
         return (
             f"{ch} is generating significantly less revenue per euro spent than last week "
             f"(ROAS {pct_text(rd)}).{diff_str}"
         )
-
     if label == "Acquisition cost rising":
         return (
             f"{ch} is becoming more expensive to convert into customers. "
-            f"CAC is now {fmt_eur(cac_curr)}, which is above last week's level. "
-            f"The spend is holding but the quality of results is declining."
+            f"CAC is now {fmt_eur(cac_curr)}, above last week's level. "
+            f"Spend is holding but result quality is declining."
         )
-
     if label == "ROAS slightly down":
         return (
             f"{ch} has softened slightly (ROAS {pct_text(rd)} versus last week), "
-            f"but the movement is not severe. Worth monitoring before taking action."
+            f"but the movement is not severe. Worth monitoring before acting."
         )
-
     if label == "Stable":
         return f"{ch} is broadly consistent compared with last week. No action needed."
-
     return f"{ch} does not have enough comparison data yet."
+
+
+# =============================================================================
+# "So what" summary sentence — computed from trend data
+# =============================================================================
+
+def build_so_what(trend, projected_spend, monthly_budget, days_remaining):
+    urgent   = trend[trend["signal"] == "Efficiency weakening"]
+    rising   = trend[trend["signal"] == "Acquisition cost rising"]
+    slight   = trend[trend["signal"] == "ROAS slightly down"]
+    stable   = trend[trend["signal"] == "Stable"]
+    is_over  = projected_spend > monthly_budget
+
+    parts = []
+
+    # Budget situation
+    if is_over:
+        parts.append(
+            f"You are on track to exceed your monthly budget by "
+            f"{fmt_eur(projected_spend - monthly_budget)} at the current daily pace."
+        )
+    else:
+        parts.append(
+            f"Spend is on track, with {fmt_eur(monthly_budget - projected_spend)} "
+            f"of headroom remaining at the current pace."
+        )
+
+    # Channel signals — most urgent first
+    if not urgent.empty:
+        names = " and ".join(urgent["channel"].tolist())
+        worst = urgent.sort_values("roas_delta_pct").iloc[0]
+        parts.append(
+            f"{names} {'has' if len(urgent)==1 else 'have'} deteriorated significantly "
+            f"in the last 7 days (ROAS {pct_text(worst['roas_delta_pct'])}) "
+            f"and {'deserves' if len(urgent)==1 else 'deserve'} your attention today."
+        )
+    elif not rising.empty:
+        names = " and ".join(rising["channel"].tolist())
+        parts.append(
+            f"{names} {'is' if len(rising)==1 else 'are'} showing rising acquisition costs "
+            f"— worth reviewing targeting and creative before the end of the week."
+        )
+    elif not slight.empty:
+        names = " and ".join(slight["channel"].tolist())
+        parts.append(
+            f"{names} {'has' if len(slight)==1 else 'have'} softened slightly "
+            f"but nothing that requires immediate action."
+        )
+    else:
+        parts.append("All channels are broadly stable compared with last week.")
+
+    # Positive highlight if something is doing well
+    if not stable.empty and not urgent.empty:
+        best = trend[trend["signal"] == "Stable"].sort_values(
+            "roas_curr", ascending=False
+        ).iloc[0]
+        parts.append(
+            f"{best['channel']} remains your most consistent channel at "
+            f"{fmt_x(best['roas_curr'])} ROAS — a candidate to absorb reallocated budget."
+        )
+
+    return " ".join(parts)
+
+
+# =============================================================================
+# PDF export
+# =============================================================================
+
+def generate_pdf(so_what, trend, spent_to_date, projected_spend,
+                 monthly_budget, days_elapsed, days_remaining,
+                 projected_roas, daily_spend_rate):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_margins(20, 20, 20)
+
+    # Title
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.set_text_color(47, 49, 64)
+    pdf.cell(0, 12, "Budget Pulse", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(113, 118, 138)
+    pdf.cell(0, 6, "Marketing performance summary", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(6)
+
+    # Divider
+    pdf.set_draw_color(230, 232, 239)
+    pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+    pdf.ln(6)
+
+    # Summary sentence
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(47, 49, 64)
+    pdf.cell(0, 7, "Summary", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(52, 55, 71)
+    pdf.multi_cell(0, 6, so_what)
+    pdf.ln(6)
+
+    # Budget section
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(47, 49, 64)
+    pdf.cell(0, 7, "Budget context", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(52, 55, 71)
+
+    budget_lines = [
+        f"Monthly budget: {fmt_eur(monthly_budget)}",
+        f"Spent so far (day {days_elapsed}): {fmt_eur(spent_to_date)}",
+        f"Projected end-of-month spend: {fmt_eur(projected_spend)}",
+        f"Projected end-of-month ROAS: {fmt_x(projected_roas)}",
+        f"Daily burn rate: {fmt_eur(daily_spend_rate)}",
+        f"Days remaining: {days_remaining}",
+    ]
+    for line in budget_lines:
+        pdf.cell(0, 6, line, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.ln(6)
+
+    # Channel signals
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.set_text_color(47, 49, 64)
+    pdf.cell(0, 7, "Channel signals", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    signal_colours = {
+        "Efficiency weakening":    (192, 57, 43),
+        "Acquisition cost rising": (175, 90, 0),
+        "ROAS slightly down":      (58, 80, 104),
+        "Stable":                  (29, 122, 69),
+        "Not enough data":         (100, 100, 100),
+    }
+
+    for _, row in trend.iterrows():
+        pdf.ln(3)
+        r, g, b = signal_colours.get(row["signal"], (100, 100, 100))
+        pdf.set_font("Helvetica", "B", 10)
+        pdf.set_text_color(47, 49, 64)
+        pdf.cell(60, 6, row["channel"], new_x=XPos.END, new_y=YPos.TOP)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(r, g, b)
+        pdf.cell(0, 6, row["signal"], new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(80, 80, 80)
+        pdf.multi_cell(0, 5, row["signal_note"])
+
+        # Mini metrics row
+        pdf.set_font("Helvetica", "", 8)
+        pdf.set_text_color(123, 128, 146)
+        cols = [
+            f"ROAS prev 7d: {fmt_x(row.get('roas_prev', np.nan))}",
+            f"ROAS last 7d: {fmt_x(row.get('roas_curr', np.nan))}",
+            f"ROAS change: {pct_text(row.get('roas_delta_pct', np.nan))}",
+            f"CAC change: {pct_text(row.get('cac_delta_pct', np.nan))}",
+        ]
+        pdf.cell(0, 5, "   |   ".join(cols), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    # Footer
+    pdf.ln(8)
+    pdf.set_draw_color(230, 232, 239)
+    pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+    pdf.ln(4)
+    pdf.set_font("Helvetica", "", 8)
+    pdf.set_text_color(160, 160, 160)
+    pdf.cell(0, 5, "Generated by Budget Pulse", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+
+    buf = BytesIO()
+    pdf.output(buf)
+    buf.seek(0)
+    return buf.read()
 
 
 # =============================================================================
@@ -86,6 +247,27 @@ def signal_note(row):
 
 st.markdown("""
 <style>
+.sowhat-banner {
+    border-radius: 16px;
+    padding: 20px 24px;
+    background: #F0F4FF;
+    border: 1px solid #C7D5F5;
+    margin-bottom: 28px;
+    margin-top: 8px;
+}
+.sowhat-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #4A5BA8;
+    margin-bottom: 8px;
+}
+.sowhat-text {
+    font-size: 15px;
+    color: #2F3140;
+    line-height: 1.7;
+}
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -103,24 +285,12 @@ st.markdown("""
     border-color: #F5C2C2;
     background: #FFF5F5;
 }
-.summary-label {
-    font-size: 13px;
-    color: #71768A;
-    margin-bottom: 8px;
-}
-.summary-value {
-    font-size: 30px;
-    font-weight: 750;
-    color: #2F3140;
-    margin-bottom: 6px;
-}
-.summary-value.red { color: #C0392B; }
+.summary-label { font-size: 13px; color: #71768A; margin-bottom: 8px; }
+.summary-value { font-size: 30px; font-weight: 750; color: #2F3140; margin-bottom: 6px; }
+.summary-value.red   { color: #C0392B; }
 .summary-value.green { color: #1D7A45; }
-.summary-note {
-    font-size: 13px;
-    color: #8A8FA3;
-}
-.summary-note.red { color: #C0392B; font-weight: 500; }
+.summary-note { font-size: 13px; color: #8A8FA3; }
+.summary-note.red   { color: #C0392B; font-weight: 500; }
 .summary-note.green { color: #1D7A45; font-weight: 500; }
 .budget-strip {
     border: 1px solid #E6E8EF;
@@ -141,12 +311,7 @@ st.markdown("""
 .signal-card.slight    { border-left: 4px solid #A0B4C8; }
 .signal-card.stable    { border-left: 4px solid #1D9E75; }
 .signal-card.nodata    { border-left: 4px solid #CCCCCC; }
-.signal-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
-    color: #2F3140;
-}
+.signal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: #2F3140; }
 .signal-badge {
     display: inline-block;
     font-size: 12px;
@@ -160,33 +325,27 @@ st.markdown("""
 .badge-slight    { background: #EBF0F5; color: #3A5068; }
 .badge-stable    { background: #E3F5EC; color: #1A5C36; }
 .badge-nodata    { background: #F0F0F0; color: #666666; }
-.signal-note {
-    font-size: 15px;
-    color: #343747;
-    margin-bottom: 12px;
-    line-height: 1.6;
-}
+.signal-note { font-size: 15px; color: #343747; margin-bottom: 12px; line-height: 1.6; }
 .signal-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-top: 10px;
 }
-.mini-metric {
+.mini-metric { background: #F8F9FC; border-radius: 10px; padding: 10px 12px; }
+.mini-label  { font-size: 12px; color: #7B8092; margin-bottom: 3px; }
+.mini-value  { font-size: 16px; font-weight: 650; color: #2F3140; }
+.empty-state {
+    border: 1.5px dashed #C5CAD8;
+    border-radius: 14px;
+    padding: 28px 24px;
     background: #F8F9FC;
-    border-radius: 10px;
-    padding: 10px 12px;
+    margin-bottom: 24px;
+    color: #5A6070;
+    font-size: 14px;
+    line-height: 1.7;
 }
-.mini-label {
-    font-size: 12px;
-    color: #7B8092;
-    margin-bottom: 3px;
-}
-.mini-value {
-    font-size: 16px;
-    font-weight: 650;
-    color: #2F3140;
-}
+.empty-state strong { color: #2F3140; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -235,7 +394,10 @@ except Exception as e:
 df.columns = df.columns.str.strip().str.lower()
 df = df.apply(lambda col: col.str.strip() if col.dtype == "object" else col)
 
-required_cols = ["date","channel","campaign","spend","impressions","clicks","leads","sales","revenue"]
+required_cols = [
+    "date","channel","campaign","spend","impressions",
+    "clicks","leads","sales","revenue"
+]
 missing = [c for c in required_cols if c not in df.columns]
 if missing:
     st.error(f"Missing columns: {missing}")
@@ -251,6 +413,29 @@ df = df.dropna(subset=["date","channel","campaign"])
 if df["date"].isna().all():
     st.error("The date column could not be parsed. Use YYYY-MM-DD format.")
     st.stop()
+
+
+# =============================================================================
+# Empty state guard — must be BEFORE sidebar and any analysis
+# =============================================================================
+
+n_days = (df["date"].max() - df["date"].min()).days + 1
+
+if n_days < 14:
+    st.markdown(f"""
+    <div class="empty-state">
+        <strong>Not enough data for trend analysis.</strong><br><br>
+        The rolling comparison needs at least <strong>14 days</strong> of data
+        to compare last week against the week before.<br>
+        Your file currently covers <strong>{n_days} day{'s' if n_days != 1 else ''}</strong>
+        ({df['date'].min().strftime('%d %b')} to {df['date'].max().strftime('%d %b')}).<br><br>
+        The budget projection and full-period channel summary below will still work,
+        but the signal cards and trend chart will not be shown until you have more data.
+    </div>
+    """, unsafe_allow_html=True)
+    TREND_READY = False
+else:
+    TREND_READY = True
 
 
 # =============================================================================
@@ -271,7 +456,9 @@ if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
     df = df[(df["date"].dt.date >= start_date) & (df["date"].dt.date <= end_date)]
 
 all_channels = sorted(df["channel"].dropna().unique())
-selected_channels = st.sidebar.multiselect("Channels", all_channels, default=all_channels)
+selected_channels = st.sidebar.multiselect(
+    "Channels", all_channels, default=all_channels
+)
 if selected_channels:
     df = df[df["channel"].isin(selected_channels)]
 
@@ -310,52 +497,55 @@ df = df.replace([np.inf, -np.inf], np.nan)
 # Rolling window: last 7d vs prior 7d
 # =============================================================================
 
-data_max    = df["date"].max()
-cutoff_mid  = data_max - timedelta(days=7)
-cutoff_prev = data_max - timedelta(days=14)
+trend = pd.DataFrame()   # default empty
 
-df_curr = df[df["date"] > cutoff_mid]
-df_prev = df[(df["date"] > cutoff_prev) & (df["date"] <= cutoff_mid)]
+if TREND_READY:
+    data_max    = df["date"].max()
+    cutoff_mid  = data_max - timedelta(days=7)
+    cutoff_prev = data_max - timedelta(days=14)
 
-def window_summary(frame):
-    g = frame.groupby("channel").agg(
-        spend       = ("spend",       "sum"),
-        revenue     = ("revenue",     "sum"),
-        clicks      = ("clicks",      "sum"),
-        leads       = ("leads",       "sum"),
-        sales       = ("sales",       "sum"),
-        impressions = ("impressions", "sum"),
-    ).reset_index()
-    g["roas"]        = safe_div(g["revenue"].values, g["spend"].values)
-    g["cac"]         = safe_div(g["spend"].values,   g["sales"].values)
-    g["cpl"]         = safe_div(g["spend"].values,   g["leads"].values)
-    g["daily_spend"] = g["spend"] / 7
-    return g.replace([np.inf, -np.inf], np.nan)
+    df_curr = df[df["date"] > cutoff_mid]
+    df_prev = df[(df["date"] > cutoff_prev) & (df["date"] <= cutoff_mid)]
 
-curr  = window_summary(df_curr).add_suffix("_curr").rename(columns={"channel_curr": "channel"})
-prev  = window_summary(df_prev).add_suffix("_prev").rename(columns={"channel_prev": "channel"})
-trend = curr.merge(prev, on="channel", how="left")
+    def window_summary(frame):
+        g = frame.groupby("channel").agg(
+            spend       = ("spend",       "sum"),
+            revenue     = ("revenue",     "sum"),
+            clicks      = ("clicks",      "sum"),
+            leads       = ("leads",       "sum"),
+            sales       = ("sales",       "sum"),
+            impressions = ("impressions", "sum"),
+        ).reset_index()
+        g["roas"]        = safe_div(g["revenue"].values, g["spend"].values)
+        g["cac"]         = safe_div(g["spend"].values,   g["sales"].values)
+        g["cpl"]         = safe_div(g["spend"].values,   g["leads"].values)
+        g["daily_spend"] = g["spend"] / 7
+        return g.replace([np.inf, -np.inf], np.nan)
 
-trend["roas_delta_pct"]  = safe_div(
-    (trend["roas_curr"]  - trend["roas_prev"]).values,  trend["roas_prev"].values)  * 100
-trend["cac_delta_pct"]   = safe_div(
-    (trend["cac_curr"]   - trend["cac_prev"]).values,   trend["cac_prev"].values)   * 100
-trend["spend_delta_pct"] = safe_div(
-    (trend["spend_curr"] - trend["spend_prev"]).values, trend["spend_prev"].values) * 100
-trend = trend.replace([np.inf, -np.inf], np.nan)
+    curr  = window_summary(df_curr).add_suffix("_curr").rename(columns={"channel_curr": "channel"})
+    prev  = window_summary(df_prev).add_suffix("_prev").rename(columns={"channel_prev": "channel"})
+    trend = curr.merge(prev, on="channel", how="left")
 
-trend["signal"]      = trend.apply(signal_label, axis=1)
-trend["signal_note"] = trend.apply(signal_note,  axis=1)
+    trend["roas_delta_pct"]  = safe_div(
+        (trend["roas_curr"]  - trend["roas_prev"]).values,  trend["roas_prev"].values)  * 100
+    trend["cac_delta_pct"]   = safe_div(
+        (trend["cac_curr"]   - trend["cac_prev"]).values,   trend["cac_prev"].values)   * 100
+    trend["spend_delta_pct"] = safe_div(
+        (trend["spend_curr"] - trend["spend_prev"]).values, trend["spend_prev"].values) * 100
+    trend = trend.replace([np.inf, -np.inf], np.nan)
 
-signal_order = {
-    "Efficiency weakening":   0,
-    "Acquisition cost rising": 1,
-    "ROAS slightly down":     2,
-    "Stable":                 3,
-    "Not enough data":        4,
-}
-trend["_sort"] = trend["signal"].map(signal_order)
-trend = trend.sort_values("_sort").drop(columns="_sort")
+    trend["signal"]      = trend.apply(signal_label, axis=1)
+    trend["signal_note"] = trend.apply(signal_note,  axis=1)
+
+    signal_order = {
+        "Efficiency weakening":    0,
+        "Acquisition cost rising": 1,
+        "ROAS slightly down":      2,
+        "Stable":                  3,
+        "Not enough data":         4,
+    }
+    trend["_sort"] = trend["signal"].map(signal_order)
+    trend = trend.sort_values("_sort").drop(columns="_sort")
 
 
 # =============================================================================
@@ -380,6 +570,22 @@ projected_roas    = projected_revenue / projected_spend if projected_spend else 
 budget_remaining  = monthly_budget - spent_to_date
 budget_variance   = projected_spend - monthly_budget
 is_overspend      = budget_variance > 0
+
+
+# =============================================================================
+# "So what" banner — shown only when trend data is available
+# =============================================================================
+
+if TREND_READY and not trend.empty:
+    so_what = build_so_what(trend, projected_spend, monthly_budget, days_remaining)
+    st.markdown(f"""
+    <div class="sowhat-banner">
+        <div class="sowhat-label">This week at a glance</div>
+        <div class="sowhat-text">{so_what}</div>
+    </div>
+    """, unsafe_allow_html=True)
+else:
+    so_what = ""
 
 
 # =============================================================================
@@ -426,17 +632,14 @@ st.markdown(f"""
 
 st.subheader("Budget context")
 
-# Determine colour states
-remaining_class = "red" if budget_remaining < 0 else ""
-remaining_note  = (
+remaining_class      = "red" if budget_remaining < 0 else ""
+remaining_note       = (
     f"Already {fmt_eur(abs(budget_remaining))} over budget"
-    if budget_remaining < 0
-    else "Still available this month"
+    if budget_remaining < 0 else "Still available this month"
 )
 remaining_note_class = "red" if budget_remaining < 0 else ""
-
-proj_class = "red" if is_overspend else "green"
-proj_note  = (
+proj_class           = "red" if is_overspend else "green"
+proj_note            = (
     f"{fmt_eur(abs(budget_variance))} over your cap at this pace"
     if is_overspend
     else f"{fmt_eur(abs(budget_variance))} under your cap at this pace"
@@ -478,131 +681,121 @@ st.caption(
 
 
 # =============================================================================
-# SECTION 3: Signal cards
+# SECTION 3: Signal cards (only when trend data available)
 # =============================================================================
 
-st.subheader("Recent channel movement")
-st.markdown(
-    "This compares the last 7 days against the 7 days before that. "
-    "It is designed to surface what is changing right now, not to give definitive verdicts. "
-    "Use it as a starting point for your own investigation."
-)
-
-# Metric glossary, placed where it's relevant
-with st.expander("What do these metrics mean?"):
+if TREND_READY and not trend.empty:
+    st.subheader("Recent channel movement")
     st.markdown(
-        "**ROAS** (Return on Ad Spend) — revenue generated per euro spent. Higher is better.\n\n"
-        "**CAC** (Customer Acquisition Cost) — how much it costs to acquire one paying customer. Lower is better.\n\n"
-        "**CPL** (Cost per Lead) — how much it costs to generate one lead. Lower is better.\n\n"
-        "**CTR** (Click-through Rate) — share of people who clicked after seeing the ad. Higher is better.\n\n"
-        "**Conversion rate** — share of clicks that became sales. Higher is better."
+        "This compares the last 7 days against the 7 days before that. "
+        "It surfaces what is changing right now, not definitive verdicts. "
+        "Use it as a starting point for your own investigation."
     )
 
-# Map signal labels to CSS modifier classes and badge classes
-css_map = {
-    "Efficiency weakening":    ("weakening", "badge-weakening"),
-    "Acquisition cost rising": ("rising",    "badge-rising"),
-    "ROAS slightly down":      ("slight",    "badge-slight"),
-    "Stable":                  ("stable",    "badge-stable"),
-    "Not enough data":         ("nodata",    "badge-nodata"),
-}
+    with st.expander("What do these metrics mean?"):
+        st.markdown(
+            "**ROAS** (Return on Ad Spend) — revenue generated per euro spent. Higher is better.\n\n"
+            "**CAC** (Customer Acquisition Cost) — cost to acquire one paying customer. Lower is better.\n\n"
+            "**CPL** (Cost per Lead) — cost to generate one lead. Lower is better.\n\n"
+            "**CTR** (Click-through Rate) — share of people who clicked after seeing the ad. Higher is better.\n\n"
+            "**Conversion rate** — share of clicks that became sales. Higher is better."
+        )
 
-for _, row in trend.iterrows():
-    card_cls, badge_cls = css_map.get(row["signal"], ("nodata", "badge-nodata"))
+    css_map = {
+        "Efficiency weakening":    ("weakening", "badge-weakening"),
+        "Acquisition cost rising": ("rising",    "badge-rising"),
+        "ROAS slightly down":      ("slight",    "badge-slight"),
+        "Stable":                  ("stable",    "badge-stable"),
+        "Not enough data":         ("nodata",    "badge-nodata"),
+    }
 
-    st.markdown(f"""
-    <div class="signal-card {card_cls}">
-        <div class="signal-title">{row["channel"]}</div>
-        <span class="signal-badge {badge_cls}">{row["signal"]}</span>
-        <div class="signal-note">{row["signal_note"]}</div>
-        <div class="signal-grid">
-            <div class="mini-metric">
-                <div class="mini-label">ROAS previous 7 days</div>
-                <div class="mini-value">{fmt_x(row.get("roas_prev", np.nan))}</div>
-            </div>
-            <div class="mini-metric">
-                <div class="mini-label">ROAS last 7 days</div>
-                <div class="mini-value">{fmt_x(row.get("roas_curr", np.nan))}</div>
-            </div>
-            <div class="mini-metric">
-                <div class="mini-label">ROAS change</div>
-                <div class="mini-value">{pct_text(row.get("roas_delta_pct", np.nan))}</div>
-            </div>
-            <div class="mini-metric">
-                <div class="mini-label">CAC change</div>
-                <div class="mini-value">{pct_text(row.get("cac_delta_pct", np.nan))}</div>
+    for _, row in trend.iterrows():
+        card_cls, badge_cls = css_map.get(row["signal"], ("nodata", "badge-nodata"))
+        st.markdown(f"""
+        <div class="signal-card {card_cls}">
+            <div class="signal-title">{row["channel"]}</div>
+            <span class="signal-badge {badge_cls}">{row["signal"]}</span>
+            <div class="signal-note">{row["signal_note"]}</div>
+            <div class="signal-grid">
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS previous 7 days</div>
+                    <div class="mini-value">{fmt_x(row.get("roas_prev", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS last 7 days</div>
+                    <div class="mini-value">{fmt_x(row.get("roas_curr", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS change</div>
+                    <div class="mini-value">{pct_text(row.get("roas_delta_pct", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">CAC change</div>
+                    <div class="mini-value">{pct_text(row.get("cac_delta_pct", np.nan))}</div>
+                </div>
             </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
+    # SECTION 4: ROAS comparison chart
+    st.subheader("ROAS by channel: last 7 days vs week before")
+    st.caption("A shorter dark bar than light bar means performance dropped in the last 7 days.")
 
-# =============================================================================
-# SECTION 4: ROAS comparison chart
-# =============================================================================
+    fig_trend = go.Figure()
+    fig_trend.add_trace(go.Bar(
+        name="Previous 7 days",
+        x=trend["channel"], y=trend["roas_prev"].round(2),
+        marker_color="#B5D4F4",
+        text=trend["roas_prev"].apply(lambda v: fmt_x(v) if not pd.isna(v) else ""),
+        textposition="outside",
+    ))
+    fig_trend.add_trace(go.Bar(
+        name="Last 7 days",
+        x=trend["channel"], y=trend["roas_curr"].round(2),
+        marker_color="#185FA5",
+        text=trend["roas_curr"].apply(lambda v: fmt_x(v) if not pd.isna(v) else ""),
+        textposition="outside",
+    ))
+    fig_trend.update_layout(
+        barmode="group", yaxis_title="ROAS", height=360,
+        margin=dict(t=40, b=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    st.plotly_chart(fig_trend, use_container_width=True)
 
-st.subheader("ROAS by channel: last 7 days vs week before")
-st.caption("A shorter dark bar than light bar means performance dropped in the last 7 days.")
+    # SECTION 5: Channel trend table
+    st.subheader("Channel details")
+    st.caption("The ROAS change column is the key figure. Red means it dropped, green means it improved.")
 
-fig_trend = go.Figure()
-fig_trend.add_trace(go.Bar(
-    name="Previous 7 days",
-    x=trend["channel"], y=trend["roas_prev"].round(2),
-    marker_color="#B5D4F4",
-    text=trend["roas_prev"].apply(lambda v: fmt_x(v) if not pd.isna(v) else ""),
-    textposition="outside",
-))
-fig_trend.add_trace(go.Bar(
-    name="Last 7 days",
-    x=trend["channel"], y=trend["roas_curr"].round(2),
-    marker_color="#185FA5",
-    text=trend["roas_curr"].apply(lambda v: fmt_x(v) if not pd.isna(v) else ""),
-    textposition="outside",
-))
-fig_trend.update_layout(
-    barmode="group", yaxis_title="ROAS", height=360,
-    margin=dict(t=40, b=20),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-)
-st.plotly_chart(fig_trend, use_container_width=True)
+    display_trend = trend[[
+        "channel","signal","roas_prev","roas_curr","roas_delta_pct",
+        "cac_curr","cac_delta_pct","daily_spend_curr",
+    ]].copy()
+    display_trend.columns = [
+        "Channel","Signal","ROAS previous 7d","ROAS last 7d",
+        "ROAS change","CAC last 7d","CAC change","Avg daily spend",
+    ]
 
+    def color_delta(val):
+        if pd.isna(val): return ""
+        if val <= -25:   return "color: #A32D2D; font-weight: 600"
+        if val <= -10:   return "color: #8A5A00; font-weight: 500"
+        if val >= 25:    return "color: #247A3E; font-weight: 600"
+        return ""
 
-# =============================================================================
-# SECTION 5: Channel trend table
-# =============================================================================
-
-st.subheader("Channel details")
-st.caption("The ROAS change column is the key figure. Red means it dropped, green means it improved.")
-
-display_trend = trend[[
-    "channel", "signal", "roas_prev", "roas_curr", "roas_delta_pct",
-    "cac_curr", "cac_delta_pct", "daily_spend_curr",
-]].copy()
-display_trend.columns = [
-    "Channel", "Signal", "ROAS previous 7d", "ROAS last 7d",
-    "ROAS change", "CAC last 7d", "CAC change", "Avg daily spend",
-]
-
-def color_delta(val):
-    if pd.isna(val): return ""
-    if val <= -25:   return "color: #A32D2D; font-weight: 600"
-    if val <= -10:   return "color: #8A5A00; font-weight: 500"
-    if val >= 25:    return "color: #247A3E; font-weight: 600"
-    return ""
-
-styled_trend = (
-    display_trend.style
-    .map(color_delta, subset=["ROAS change"])
-    .format({
-        "ROAS previous 7d": lambda v: fmt_x(v),
-        "ROAS last 7d":     lambda v: fmt_x(v),
-        "ROAS change":      lambda v: pct_text(v),
-        "CAC last 7d":      lambda v: fmt_eur(v),
-        "CAC change":       lambda v: pct_text(v),
-        "Avg daily spend":  lambda v: fmt_eur(v),
-    })
-)
-st.dataframe(styled_trend, use_container_width=True)
+    styled_trend = (
+        display_trend.style
+        .map(color_delta, subset=["ROAS change"])
+        .format({
+            "ROAS previous 7d": lambda v: fmt_x(v),
+            "ROAS last 7d":     lambda v: fmt_x(v),
+            "ROAS change":      lambda v: pct_text(v),
+            "CAC last 7d":      lambda v: fmt_eur(v),
+            "CAC change":       lambda v: pct_text(v),
+            "Avg daily spend":  lambda v: fmt_eur(v),
+        })
+    )
+    st.dataframe(styled_trend, use_container_width=True)
 
 
 # =============================================================================
@@ -644,9 +837,7 @@ st.plotly_chart(fig_ts, use_container_width=True)
 # =============================================================================
 
 st.subheader("Daily spend by channel")
-st.caption(
-    "Useful for spotting pacing issues, budget gaps, or channels that went dark mid-month."
-)
+st.caption("Useful for spotting pacing issues, budget gaps, or channels that went dark mid-month.")
 
 daily_spend_ch = (
     df.groupby(["date","channel"])
@@ -670,9 +861,8 @@ st.plotly_chart(fig_spend, use_container_width=True)
 
 st.subheader("Full period channel performance")
 st.caption(
-    "Aggregates the entire date range you selected. A channel can have a strong overall ROAS "
-    "but still be flagged above if it deteriorated sharply in recent days. "
-    "Use both views together."
+    "Aggregates the entire date range selected. A channel can have a strong overall ROAS "
+    "but still be flagged above if it deteriorated sharply in recent days. Use both views together."
 )
 
 channel_summary = df.groupby("channel").agg(
@@ -783,3 +973,41 @@ fig_camp = px.line(
 )
 fig_camp.update_layout(height=320, margin=dict(t=40, b=20))
 st.plotly_chart(fig_camp, use_container_width=True)
+
+
+# =============================================================================
+# SECTION 10: PDF export
+# =============================================================================
+
+st.markdown("---")
+st.subheader("Export this report")
+st.markdown(
+    "Download a one-page PDF summary of the signals and budget context. "
+    "Useful for sharing in a Monday morning message or attaching to a client report."
+)
+
+if TREND_READY and not trend.empty and so_what:
+    if st.button("Generate PDF summary"):
+        with st.spinner("Building your PDF..."):
+            pdf_bytes = generate_pdf(
+                so_what        = so_what,
+                trend          = trend,
+                spent_to_date  = spent_to_date,
+                projected_spend= projected_spend,
+                monthly_budget = monthly_budget,
+                days_elapsed   = days_elapsed,
+                days_remaining = days_remaining,
+                projected_roas = projected_roas,
+                daily_spend_rate = daily_spend_rate,
+            )
+        st.download_button(
+            label     = "Download PDF",
+            data      = pdf_bytes,
+            file_name = "budget_pulse_report.pdf",
+            mime      = "application/pdf",
+        )
+else:
+    st.info(
+        "PDF export is available once you have at least 14 days of data "
+        "and the trend analysis has run."
+    )
