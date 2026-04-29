@@ -1,0 +1,361 @@
+date,channel,campaign,spend,impressions,clicks,leads,sales,revenue
+2026-04-01,Google Ads,Brand Search,147,8213,474,24,9,475
+2026-04-01,Google Ads,Generic Search,160,9286,562,23,6,497
+2026-04-01,Google Ads,Shopping,116,7187,465,31,5,367
+2026-04-01,Meta Ads,Retargeting,141,7787,153,11,2,310
+2026-04-01,Meta Ads,Prospecting,148,9883,156,6,3,364
+2026-04-01,Meta Ads,Stories,141,11356,206,18,2,343
+2026-04-01,LinkedIn Ads,B2B Leads,173,13260,132,9,2,277
+2026-04-01,LinkedIn Ads,Sponsored Content,140,9118,71,3,0,239
+2026-04-01,Email,Newsletter,31,2100,423,21,5,178
+2026-04-01,Email,Promo Blast,32,2442,462,35,4,162
+2026-04-01,Display,Awareness,88,6811,27,2,0,113
+2026-04-01,Display,Retargeting Banner,68,3816,14,0,0,90
+2026-04-02,Google Ads,Brand Search,159,10496,681,40,16,488
+2026-04-02,Google Ads,Generic Search,128,8144,514,27,9,435
+2026-04-02,Google Ads,Shopping,135,8461,602,39,5,373
+2026-04-02,Meta Ads,Retargeting,109,8388,164,10,1,254
+2026-04-02,Meta Ads,Prospecting,149,10954,225,18,1,377
+2026-04-02,Meta Ads,Stories,135,9962,166,11,1,319
+2026-04-02,LinkedIn Ads,B2B Leads,152,13434,134,7,2,252
+2026-04-02,LinkedIn Ads,Sponsored Content,178,15213,128,9,2,294
+2026-04-02,Email,Newsletter,33,2437,554,36,4,164
+2026-04-02,Email,Promo Blast,25,2187,511,41,6,116
+2026-04-02,Display,Awareness,85,7492,26,1,0,108
+2026-04-02,Display,Retargeting Banner,82,4878,19,1,0,107
+2026-04-03,Google Ads,Brand Search,136,8488,532,40,6,403
+2026-04-03,Google Ads,Generic Search,165,12828,780,51,7,478
+2026-04-03,Google Ads,Shopping,132,9977,568,28,5,422
+2026-04-03,Meta Ads,Retargeting,114,9882,197,8,2,285
+2026-04-03,Meta Ads,Prospecting,114,6797,138,9,2,292
+2026-04-03,Meta Ads,Stories,141,8694,137,8,2,336
+2026-04-03,LinkedIn Ads,B2B Leads,168,13199,136,6,2,291
+2026-04-03,LinkedIn Ads,Sponsored Content,175,11148,91,5,1,298
+2026-04-03,Email,Newsletter,27,2357,486,40,8,125
+2026-04-03,Email,Promo Blast,35,2949,706,60,15,167
+2026-04-03,Display,Awareness,75,4686,18,0,0,100
+2026-04-03,Display,Retargeting Banner,69,5688,22,1,0,93
+2026-04-04,Google Ads,Brand Search,143,11460,636,34,15,452
+2026-04-04,Google Ads,Generic Search,142,11527,619,42,10,477
+2026-04-04,Google Ads,Shopping,123,10901,590,29,10,397
+2026-04-04,Meta Ads,Retargeting,115,6807,136,7,2,284
+2026-04-04,Meta Ads,Prospecting,123,9277,168,14,1,311
+2026-04-04,Meta Ads,Stories,115,7918,149,8,1,293
+2026-04-04,LinkedIn Ads,B2B Leads,131,9306,96,8,0,220
+2026-04-04,LinkedIn Ads,Sponsored Content,142,12448,124,10,1,235
+2026-04-04,Email,Newsletter,34,2707,587,52,11,156
+2026-04-04,Email,Promo Blast,33,2160,475,41,4,156
+2026-04-04,Display,Awareness,64,4759,17,1,0,71
+2026-04-04,Display,Retargeting Banner,79,5074,20,1,0,86
+2026-04-05,Google Ads,Brand Search,136,8796,464,36,8,398
+2026-04-05,Google Ads,Generic Search,152,11294,685,27,6,515
+2026-04-05,Google Ads,Shopping,160,11855,808,55,8,452
+2026-04-05,Meta Ads,Retargeting,118,10202,199,16,4,263
+2026-04-05,Meta Ads,Prospecting,115,6738,131,11,1,284
+2026-04-05,Meta Ads,Stories,111,9717,194,17,4,291
+2026-04-05,LinkedIn Ads,B2B Leads,128,10339,88,7,1,251
+2026-04-05,LinkedIn Ads,Sponsored Content,172,11066,108,4,2,336
+2026-04-05,Email,Newsletter,27,2256,468,25,10,131
+2026-04-05,Email,Promo Blast,25,1543,307,25,7,123
+2026-04-05,Display,Awareness,79,5450,24,1,0,86
+2026-04-05,Display,Retargeting Banner,88,5389,24,1,0,104
+2026-04-06,Google Ads,Brand Search,152,10028,641,42,9,480
+2026-04-06,Google Ads,Generic Search,128,10215,538,46,9,418
+2026-04-06,Google Ads,Shopping,152,11927,709,30,13,452
+2026-04-06,Meta Ads,Retargeting,118,9992,191,10,2,277
+2026-04-06,Meta Ads,Prospecting,122,7972,127,7,3,305
+2026-04-06,Meta Ads,Stories,145,11098,187,12,1,330
+2026-04-06,LinkedIn Ads,B2B Leads,151,11370,107,6,1,253
+2026-04-06,LinkedIn Ads,Sponsored Content,154,13327,130,6,1,278
+2026-04-06,Email,Newsletter,31,2068,475,36,9,151
+2026-04-06,Email,Promo Blast,27,1508,292,18,6,126
+2026-04-06,Display,Awareness,73,5624,20,1,0,82
+2026-04-06,Display,Retargeting Banner,79,4360,18,1,0,93
+2026-04-07,Google Ads,Brand Search,124,10977,684,29,8,417
+2026-04-07,Google Ads,Generic Search,138,11460,746,66,13,474
+2026-04-07,Google Ads,Shopping,160,12230,808,52,17,502
+2026-04-07,Meta Ads,Retargeting,145,11749,209,11,2,359
+2026-04-07,Meta Ads,Prospecting,139,10181,190,10,1,316
+2026-04-07,Meta Ads,Stories,116,7678,139,6,1,291
+2026-04-07,LinkedIn Ads,B2B Leads,167,9560,83,5,1,279
+2026-04-07,LinkedIn Ads,Sponsored Content,151,13087,120,8,2,289
+2026-04-07,Email,Newsletter,29,1600,321,24,7,167
+2026-04-07,Email,Promo Blast,29,2353,500,35,5,141
+2026-04-07,Display,Awareness,73,4089,15,1,0,81
+2026-04-07,Display,Retargeting Banner,74,4400,18,0,0,90
+2026-04-08,Google Ads,Brand Search,116,8989,496,31,4,349
+2026-04-08,Google Ads,Generic Search,125,8304,555,32,11,418
+2026-04-08,Google Ads,Shopping,128,7406,392,26,9,383
+2026-04-08,Meta Ads,Retargeting,134,11033,207,16,4,298
+2026-04-08,Meta Ads,Prospecting,105,6335,101,7,1,235
+2026-04-08,Meta Ads,Stories,136,11130,180,12,3,296
+2026-04-08,LinkedIn Ads,B2B Leads,173,15356,121,4,1,325
+2026-04-08,LinkedIn Ads,Sponsored Content,181,12467,119,5,2,336
+2026-04-08,Email,Newsletter,26,2132,494,34,4,151
+2026-04-08,Email,Promo Blast,33,2216,455,26,7,165
+2026-04-08,Display,Awareness,84,7037,24,2,0,109
+2026-04-08,Display,Retargeting Banner,81,5689,24,2,0,104
+2026-04-09,Google Ads,Brand Search,142,10212,620,47,7,477
+2026-04-09,Google Ads,Generic Search,157,9111,629,32,10,500
+2026-04-09,Google Ads,Shopping,134,7504,514,25,5,445
+2026-04-09,Meta Ads,Retargeting,119,10211,194,10,1,316
+2026-04-09,Meta Ads,Prospecting,108,8661,155,12,3,268
+2026-04-09,Meta Ads,Stories,126,10426,164,8,3,288
+2026-04-09,LinkedIn Ads,B2B Leads,160,11450,104,6,2,276
+2026-04-09,LinkedIn Ads,Sponsored Content,166,10704,89,4,1,272
+2026-04-09,Email,Newsletter,30,2450,465,23,7,164
+2026-04-09,Email,Promo Blast,35,2567,503,22,5,170
+2026-04-09,Display,Awareness,66,3662,14,0,0,80
+2026-04-09,Display,Retargeting Banner,80,4753,21,1,0,98
+2026-04-10,Google Ads,Brand Search,138,9717,545,23,13,426
+2026-04-10,Google Ads,Generic Search,156,10767,582,41,5,443
+2026-04-10,Google Ads,Shopping,143,9385,668,30,14,455
+2026-04-10,Meta Ads,Retargeting,140,8805,159,9,2,365
+2026-04-10,Meta Ads,Prospecting,149,9787,182,12,3,396
+2026-04-10,Meta Ads,Stories,113,7049,132,6,1,244
+2026-04-10,LinkedIn Ads,B2B Leads,127,8987,83,4,0,240
+2026-04-10,LinkedIn Ads,Sponsored Content,166,11767,111,9,2,308
+2026-04-10,Email,Newsletter,32,2805,575,38,10,183
+2026-04-10,Email,Promo Blast,34,1954,369,20,7,180
+2026-04-10,Display,Awareness,69,4095,17,1,0,83
+2026-04-10,Display,Retargeting Banner,75,4336,14,0,0,85
+2026-04-11,Google Ads,Brand Search,119,10551,720,49,17,413
+2026-04-11,Google Ads,Generic Search,149,9600,513,39,8,479
+2026-04-11,Google Ads,Shopping,161,9877,628,45,10,450
+2026-04-11,Meta Ads,Retargeting,120,7999,151,12,2,301
+2026-04-11,Meta Ads,Prospecting,117,10305,202,13,3,268
+2026-04-11,Meta Ads,Stories,119,10585,185,12,4,296
+2026-04-11,LinkedIn Ads,B2B Leads,157,10905,88,5,1,291
+2026-04-11,LinkedIn Ads,Sponsored Content,170,10561,96,8,1,321
+2026-04-11,Email,Newsletter,26,2315,502,26,5,137
+2026-04-11,Email,Promo Blast,31,1806,435,37,6,146
+2026-04-11,Display,Awareness,84,6085,25,1,0,109
+2026-04-11,Display,Retargeting Banner,88,5590,22,1,0,106
+2026-04-12,Google Ads,Brand Search,159,13553,783,62,11,544
+2026-04-12,Google Ads,Generic Search,140,11720,679,37,12,486
+2026-04-12,Google Ads,Shopping,139,8367,524,30,9,435
+2026-04-12,Meta Ads,Retargeting,125,8282,135,10,2,281
+2026-04-12,Meta Ads,Prospecting,139,7857,151,11,3,324
+2026-04-12,Meta Ads,Stories,134,11219,231,14,1,322
+2026-04-12,LinkedIn Ads,B2B Leads,160,13670,136,8,2,285
+2026-04-12,LinkedIn Ads,Sponsored Content,167,11581,109,5,1,334
+2026-04-12,Email,Newsletter,28,2218,486,40,10,158
+2026-04-12,Email,Promo Blast,29,1916,428,33,9,134
+2026-04-12,Display,Awareness,63,4856,21,1,0,74
+2026-04-12,Display,Retargeting Banner,64,4939,21,1,0,84
+2026-04-13,Google Ads,Brand Search,117,9695,563,33,5,365
+2026-04-13,Google Ads,Generic Search,143,11831,660,29,15,456
+2026-04-13,Google Ads,Shopping,127,11042,611,38,7,371
+2026-04-13,Meta Ads,Retargeting,104,8648,174,12,1,246
+2026-04-13,Meta Ads,Prospecting,120,9067,170,10,2,312
+2026-04-13,Meta Ads,Stories,113,7736,138,7,2,276
+2026-04-13,LinkedIn Ads,B2B Leads,182,11890,122,8,1,333
+2026-04-13,LinkedIn Ads,Sponsored Content,165,13375,104,7,1,326
+2026-04-13,Email,Newsletter,28,2322,503,28,9,150
+2026-04-13,Email,Promo Blast,32,2567,564,46,10,183
+2026-04-13,Display,Awareness,79,5199,20,1,0,85
+2026-04-13,Display,Retargeting Banner,69,5600,20,0,0,92
+2026-04-14,Google Ads,Brand Search,142,12350,841,44,18,438
+2026-04-14,Google Ads,Generic Search,155,12575,741,33,18,439
+2026-04-14,Google Ads,Shopping,164,13957,923,82,22,546
+2026-04-14,Meta Ads,Retargeting,121,10003,153,10,2,302
+2026-04-14,Meta Ads,Prospecting,135,10187,201,17,1,303
+2026-04-14,Meta Ads,Stories,105,9024,165,14,1,226
+2026-04-14,LinkedIn Ads,B2B Leads,173,15021,127,7,1,345
+2026-04-14,LinkedIn Ads,Sponsored Content,144,10402,82,6,0,256
+2026-04-14,Email,Newsletter,32,2592,617,37,12,153
+2026-04-14,Email,Promo Blast,29,1695,354,21,8,134
+2026-04-14,Display,Awareness,72,5077,23,1,0,90
+2026-04-14,Display,Retargeting Banner,76,6781,25,1,0,83
+2026-04-15,Google Ads,Brand Search,158,11204,728,52,13,434
+2026-04-15,Google Ads,Generic Search,154,9782,538,36,4,508
+2026-04-15,Google Ads,Shopping,125,7819,538,30,5,425
+2026-04-15,Meta Ads,Retargeting,104,8844,142,6,1,230
+2026-04-15,Meta Ads,Prospecting,134,7490,115,9,1,308
+2026-04-15,Meta Ads,Stories,112,6365,122,8,2,267
+2026-04-15,LinkedIn Ads,B2B Leads,171,12476,99,6,2,274
+2026-04-15,LinkedIn Ads,Sponsored Content,171,14593,132,8,3,275
+2026-04-15,Email,Newsletter,30,2071,459,29,10,140
+2026-04-15,Email,Promo Blast,25,1907,348,18,6,132
+2026-04-15,Display,Awareness,70,6286,25,1,0,76
+2026-04-15,Display,Retargeting Banner,80,6787,28,2,0,89
+2026-04-16,Google Ads,Brand Search,138,8693,512,32,7,386
+2026-04-16,Google Ads,Generic Search,136,10645,635,30,15,378
+2026-04-16,Google Ads,Shopping,157,9147,498,38,10,493
+2026-04-16,Meta Ads,Retargeting,131,9779,167,7,2,327
+2026-04-16,Meta Ads,Prospecting,138,11782,226,19,4,319
+2026-04-16,Meta Ads,Stories,130,8117,152,7,1,338
+2026-04-16,LinkedIn Ads,B2B Leads,148,12090,111,8,2,297
+2026-04-16,LinkedIn Ads,Sponsored Content,173,13230,124,5,2,336
+2026-04-16,Email,Newsletter,27,1655,368,20,5,124
+2026-04-16,Email,Promo Blast,34,2543,518,24,9,157
+2026-04-16,Display,Awareness,82,5127,20,1,0,104
+2026-04-16,Display,Retargeting Banner,82,6138,21,0,0,101
+2026-04-17,Google Ads,Brand Search,149,9614,625,40,9,437
+2026-04-17,Google Ads,Generic Search,153,9024,547,29,10,473
+2026-04-17,Google Ads,Shopping,148,8375,502,35,4,437
+2026-04-17,Meta Ads,Retargeting,113,6757,112,6,0,287
+2026-04-17,Meta Ads,Prospecting,112,7650,146,9,3,289
+2026-04-17,Meta Ads,Stories,107,9112,141,5,3,279
+2026-04-17,LinkedIn Ads,B2B Leads,159,11935,114,6,1,253
+2026-04-17,LinkedIn Ads,Sponsored Content,145,12041,112,9,2,235
+2026-04-17,Email,Newsletter,34,2159,465,30,6,169
+2026-04-17,Email,Promo Blast,28,1866,352,23,3,146
+2026-04-17,Display,Awareness,86,5781,24,1,0,97
+2026-04-17,Display,Retargeting Banner,65,4023,16,1,0,72
+2026-04-18,Google Ads,Brand Search,154,11133,742,57,11,526
+2026-04-18,Google Ads,Generic Search,143,11044,710,59,13,406
+2026-04-18,Google Ads,Shopping,118,8316,485,26,4,366
+2026-04-18,Meta Ads,Retargeting,118,8356,130,10,1,308
+2026-04-18,Meta Ads,Prospecting,143,10943,197,12,3,367
+2026-04-18,Meta Ads,Stories,145,10257,201,14,2,346
+2026-04-18,LinkedIn Ads,B2B Leads,136,7774,61,5,0,257
+2026-04-18,LinkedIn Ads,Sponsored Content,155,9461,78,4,1,281
+2026-04-18,Email,Newsletter,26,1769,347,20,4,138
+2026-04-18,Email,Promo Blast,33,2562,467,20,9,163
+2026-04-18,Display,Awareness,81,6316,28,2,0,99
+2026-04-18,Display,Retargeting Banner,65,4370,19,1,0,80
+2026-04-19,Google Ads,Brand Search,162,10665,636,50,13,523
+2026-04-19,Google Ads,Generic Search,157,12694,830,55,15,478
+2026-04-19,Google Ads,Shopping,133,9002,504,25,12,411
+2026-04-19,Meta Ads,Retargeting,114,6818,107,8,1,291
+2026-04-19,Meta Ads,Prospecting,142,12201,189,10,3,311
+2026-04-19,Meta Ads,Stories,121,7342,145,11,3,267
+2026-04-19,LinkedIn Ads,B2B Leads,152,10545,99,5,1,259
+2026-04-19,LinkedIn Ads,Sponsored Content,169,11950,108,5,2,302
+2026-04-19,Email,Newsletter,34,2307,549,48,8,168
+2026-04-19,Email,Promo Blast,29,2130,509,41,11,138
+2026-04-19,Display,Awareness,68,5266,23,1,0,88
+2026-04-19,Display,Retargeting Banner,84,5458,23,1,0,92
+2026-04-20,Google Ads,Brand Search,137,12073,686,42,9,376
+2026-04-20,Google Ads,Generic Search,117,8490,484,43,6,322
+2026-04-20,Google Ads,Shopping,162,13668,885,70,9,477
+2026-04-20,Meta Ads,Retargeting,142,11269,180,13,2,300
+2026-04-20,Meta Ads,Prospecting,107,6843,135,9,2,259
+2026-04-20,Meta Ads,Stories,109,7094,120,5,1,280
+2026-04-20,LinkedIn Ads,B2B Leads,153,9008,90,6,0,276
+2026-04-20,LinkedIn Ads,Sponsored Content,141,8463,74,5,0,249
+2026-04-20,Email,Newsletter,32,1855,445,19,7,167
+2026-04-20,Email,Promo Blast,35,2603,528,33,9,203
+2026-04-20,Display,Awareness,68,3778,16,0,0,84
+2026-04-20,Display,Retargeting Banner,82,6619,25,1,0,106
+2026-04-21,Google Ads,Brand Search,124,10201,625,46,11,413
+2026-04-21,Google Ads,Generic Search,118,9695,593,32,5,339
+2026-04-21,Google Ads,Shopping,117,10257,638,57,10,341
+2026-04-21,Meta Ads,Retargeting,138,8513,146,11,3,318
+2026-04-21,Meta Ads,Prospecting,110,7466,150,11,3,257
+2026-04-21,Meta Ads,Stories,148,10710,192,16,3,381
+2026-04-21,LinkedIn Ads,B2B Leads,168,9704,90,7,1,289
+2026-04-21,LinkedIn Ads,Sponsored Content,132,10313,87,6,1,248
+2026-04-21,Email,Newsletter,28,1581,368,21,9,138
+2026-04-21,Email,Promo Blast,35,3086,565,40,8,195
+2026-04-21,Display,Awareness,80,7067,25,1,0,85
+2026-04-21,Display,Retargeting Banner,63,5181,19,1,0,78
+2026-04-22,Google Ads,Brand Search,149,13143,783,61,13,465
+2026-04-22,Google Ads,Generic Search,135,10494,601,27,12,418
+2026-04-22,Google Ads,Shopping,134,10004,575,30,8,465
+2026-04-22,Meta Ads,Retargeting,117,10187,171,7,3,261
+2026-04-22,Meta Ads,Prospecting,145,10233,151,10,3,313
+2026-04-22,Meta Ads,Stories,120,6872,117,9,2,284
+2026-04-22,LinkedIn Ads,B2B Leads,179,13840,135,8,1,299
+2026-04-22,LinkedIn Ads,Sponsored Content,135,11159,86,5,1,261
+2026-04-22,Email,Newsletter,31,2368,435,24,10,170
+2026-04-22,Email,Promo Blast,30,2457,566,24,13,161
+2026-04-22,Display,Awareness,74,5831,22,1,0,92
+2026-04-22,Display,Retargeting Banner,66,5862,22,1,0,72
+2026-04-23,Google Ads,Brand Search,123,7473,438,33,6,422
+2026-04-23,Google Ads,Generic Search,160,13537,776,55,13,451
+2026-04-23,Google Ads,Shopping,130,9577,594,28,14,370
+2026-04-23,Meta Ads,Retargeting,134,10749,175,12,2,304
+2026-04-23,Meta Ads,Prospecting,105,5942,97,5,1,235
+2026-04-23,Meta Ads,Stories,123,9515,150,9,1,288
+2026-04-23,LinkedIn Ads,B2B Leads,154,12807,121,6,1,248
+2026-04-23,LinkedIn Ads,Sponsored Content,152,10936,89,6,1,288
+2026-04-23,Email,Newsletter,33,2809,674,31,9,174
+2026-04-23,Email,Promo Blast,28,1997,390,20,3,138
+2026-04-23,Display,Awareness,72,5510,20,1,0,83
+2026-04-23,Display,Retargeting Banner,77,5077,21,1,0,92
+2026-04-24,Google Ads,Brand Search,130,7255,509,33,12,375
+2026-04-24,Google Ads,Generic Search,133,7550,467,39,8,409
+2026-04-24,Google Ads,Shopping,142,12020,729,61,14,468
+2026-04-24,Meta Ads,Retargeting,121,8351,125,5,1,213
+2026-04-24,Meta Ads,Prospecting,127,10382,142,10,2,226
+2026-04-24,Meta Ads,Stories,148,10180,162,7,3,308
+2026-04-24,LinkedIn Ads,B2B Leads,138,10049,90,3,0,238
+2026-04-24,LinkedIn Ads,Sponsored Content,154,10933,101,6,1,285
+2026-04-24,Email,Newsletter,26,2331,524,28,7,146
+2026-04-24,Email,Promo Blast,30,2394,472,38,6,163
+2026-04-24,Display,Awareness,88,6637,28,2,0,94
+2026-04-24,Display,Retargeting Banner,74,6574,28,2,0,94
+2026-04-25,Google Ads,Brand Search,144,8779,565,40,12,409
+2026-04-25,Google Ads,Generic Search,149,8359,587,26,4,441
+2026-04-25,Google Ads,Shopping,122,9658,582,45,13,412
+2026-04-25,Meta Ads,Retargeting,137,7833,94,3,0,258
+2026-04-25,Meta Ads,Prospecting,128,8445,103,6,1,224
+2026-04-25,Meta Ads,Stories,139,11152,158,8,2,233
+2026-04-25,LinkedIn Ads,B2B Leads,141,10509,86,7,1,241
+2026-04-25,LinkedIn Ads,Sponsored Content,139,11074,94,5,2,268
+2026-04-25,Email,Newsletter,28,1659,366,21,9,157
+2026-04-25,Email,Promo Blast,35,2910,572,31,11,175
+2026-04-25,Display,Awareness,73,4670,18,0,0,97
+2026-04-25,Display,Retargeting Banner,80,4784,19,1,0,100
+2026-04-26,Google Ads,Brand Search,142,10980,589,35,11,398
+2026-04-26,Google Ads,Generic Search,154,8497,534,46,7,527
+2026-04-26,Google Ads,Shopping,159,11402,643,56,8,510
+2026-04-26,Meta Ads,Retargeting,145,8429,107,4,1,267
+2026-04-26,Meta Ads,Prospecting,146,8924,124,4,2,272
+2026-04-26,Meta Ads,Stories,122,8825,124,7,2,222
+2026-04-26,LinkedIn Ads,B2B Leads,128,9584,76,6,0,257
+2026-04-26,LinkedIn Ads,Sponsored Content,157,11349,115,9,1,262
+2026-04-26,Email,Newsletter,26,1577,327,17,3,143
+2026-04-26,Email,Promo Blast,33,2470,558,27,12,188
+2026-04-26,Display,Awareness,84,6134,21,1,0,92
+2026-04-26,Display,Retargeting Banner,70,4457,16,0,0,93
+2026-04-27,Google Ads,Brand Search,130,10439,552,40,10,361
+2026-04-27,Google Ads,Generic Search,121,7954,479,31,11,393
+2026-04-27,Google Ads,Shopping,130,7684,535,29,9,376
+2026-04-27,Meta Ads,Retargeting,110,6639,81,3,0,169
+2026-04-27,Meta Ads,Prospecting,125,9226,110,3,0,202
+2026-04-27,Meta Ads,Stories,144,8332,93,4,0,222
+2026-04-27,LinkedIn Ads,B2B Leads,131,9715,87,5,0,226
+2026-04-27,LinkedIn Ads,Sponsored Content,156,9214,75,5,0,281
+2026-04-27,Email,Newsletter,33,2338,492,30,4,170
+2026-04-27,Email,Promo Blast,33,2650,539,43,11,175
+2026-04-27,Display,Awareness,63,4224,14,1,0,68
+2026-04-27,Display,Retargeting Banner,87,4881,18,1,0,116
+2026-04-28,Google Ads,Brand Search,147,10247,729,43,16,500
+2026-04-28,Google Ads,Generic Search,134,10572,687,46,13,400
+2026-04-28,Google Ads,Shopping,124,9151,572,43,6,339
+2026-04-28,Meta Ads,Retargeting,105,6871,74,2,0,155
+2026-04-28,Meta Ads,Prospecting,115,7718,74,3,0,143
+2026-04-28,Meta Ads,Stories,141,9823,109,5,0,180
+2026-04-28,LinkedIn Ads,B2B Leads,133,7471,69,5,0,253
+2026-04-28,LinkedIn Ads,Sponsored Content,150,9480,78,6,0,270
+2026-04-28,Email,Newsletter,28,2339,525,29,9,152
+2026-04-28,Email,Promo Blast,28,1835,344,25,4,139
+2026-04-28,Display,Awareness,63,5556,24,2,0,74
+2026-04-28,Display,Retargeting Banner,75,6677,30,2,0,86
+2026-04-29,Google Ads,Brand Search,136,8190,488,37,7,457
+2026-04-29,Google Ads,Generic Search,130,10369,701,60,12,448
+2026-04-29,Google Ads,Shopping,143,8536,488,24,9,488
+2026-04-29,Meta Ads,Retargeting,142,8269,81,2,0,181
+2026-04-29,Meta Ads,Prospecting,131,11210,93,3,0,163
+2026-04-29,Meta Ads,Stories,126,10764,94,4,0,171
+2026-04-29,LinkedIn Ads,B2B Leads,181,10698,110,7,1,334
+2026-04-29,LinkedIn Ads,Sponsored Content,139,12097,110,8,1,252
+2026-04-29,Email,Newsletter,28,1796,378,24,3,162
+2026-04-29,Email,Promo Blast,30,2531,597,34,8,158
+2026-04-29,Display,Awareness,67,4027,14,1,0,79
+2026-04-29,Display,Retargeting Banner,66,4391,16,1,0,82
+2026-04-30,Google Ads,Brand Search,149,9536,648,57,12,461
+2026-04-30,Google Ads,Generic Search,123,10187,568,43,9,419
+2026-04-30,Google Ads,Shopping,142,10999,591,24,13,487
+2026-04-30,Meta Ads,Retargeting,134,10954,86,3,0,152
+2026-04-30,Meta Ads,Prospecting,104,7560,58,1,0,115
+2026-04-30,Meta Ads,Stories,126,9081,62,1,0,137
+2026-04-30,LinkedIn Ads,B2B Leads,142,12668,97,7,1,274
+2026-04-30,LinkedIn Ads,Sponsored Content,178,10456,82,3,0,322
+2026-04-30,Email,Newsletter,33,2123,432,25,6,174
+2026-04-30,Email,Promo Blast,35,2201,487,40,9,198
+2026-04-30,Display,Awareness,82,4778,18,1,0,87
+2026-04-30,Display,Retargeting Banner,66,4784,18,1,0,86
