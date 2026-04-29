@@ -20,62 +20,159 @@ def fmt_eur(x):
     return f"€{x:,.0f}"
 
 
-def fmt_pct(x):
-    if pd.isna(x):
-        return "N/A"
-    return f"{x:.1%}"
-
-
 def fmt_x(x):
     if pd.isna(x):
         return "N/A"
     return f"{x:.2f}x"
 
 
-def clean_sentence(text):
-    return str(text).strip().replace("—", "-")
-
-
 def paragraph(*lines):
-    return "\n\n".join([clean_sentence(line) for line in lines if line])
+    return "\n\n".join([str(line).strip().replace("—", "-") for line in lines if line])
 
 
-# ── Page intro ───────────────────────────────────────────────────────────────
+def pct_text(x):
+    if pd.isna(x):
+        return "N/A"
+    return f"{x:+.1f}%"
+
+
+def signal_label(row):
+    rd = row.get("roas_delta_pct", np.nan)
+    cd = row.get("cac_delta_pct", np.nan)
+
+    if pd.isna(rd) and pd.isna(cd):
+        return "Not enough data"
+
+    if not pd.isna(rd) and rd <= -25:
+        return "Efficiency weakening"
+
+    if not pd.isna(cd) and cd >= 45:
+        return "Acquisition cost rising"
+
+    if not pd.isna(rd) and rd <= -10:
+        return "Slight decline"
+
+    return "Stable"
+
+
+def signal_note(row):
+    label = row["signal"]
+    ch = row["channel"]
+    rd = row.get("roas_delta_pct", np.nan)
+    cd = row.get("cac_delta_pct", np.nan)
+
+    if label == "Efficiency weakening":
+        return f"{ch} is generating less revenue per euro spent than last week."
+
+    if label == "Acquisition cost rising":
+        return f"{ch} is becoming more expensive to convert into customers."
+
+    if label == "Slight decline":
+        return f"{ch} has softened slightly, but the movement is not severe."
+
+    if label == "Stable":
+        return f"{ch} is broadly consistent compared with last week."
+
+    return f"{ch} does not have enough comparison data yet."
+
+
+# ── Page style ───────────────────────────────────────────────────────────────
+
+st.markdown(
+    """
+    <style>
+    .main-block {
+        padding: 1rem 0 0.5rem 0;
+    }
+
+    .signal-card {
+        border: 1px solid #E6E8EF;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+        background: #FFFFFF;
+    }
+
+    .signal-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #2F3140;
+    }
+
+    .signal-meta {
+        font-size: 14px;
+        color: #6F7485;
+        margin-bottom: 12px;
+    }
+
+    .signal-note {
+        font-size: 15px;
+        color: #343747;
+        margin-bottom: 10px;
+    }
+
+    .signal-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .mini-metric {
+        background: #F8F9FC;
+        border-radius: 10px;
+        padding: 10px 12px;
+    }
+
+    .mini-label {
+        font-size: 12px;
+        color: #7B8092;
+        margin-bottom: 3px;
+    }
+
+    .mini-value {
+        font-size: 16px;
+        font-weight: 650;
+        color: #2F3140;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ── Intro ────────────────────────────────────────────────────────────────────
 
 st.title("Budget Pulse")
-st.caption(
-    "A simple read on marketing performance, budget pace, and where action may be needed."
-)
+st.caption("A cleaner view of marketing performance, budget use, and weekly movement.")
 
 st.markdown(
     paragraph(
-        "This app helps you understand how your marketing channels are performing without jumping straight into raw numbers.",
-        "It looks at spend, revenue, ROAS, CAC, and weekly changes, then translates those signals into plain-language recommendations."
+        "This app looks at your marketing data and helps you understand what is improving, what is weakening, and where budget is going.",
+        "The focus is not only on showing numbers, but on making the dashboard easier to read."
     )
 )
 
 with st.expander("How to read the main metrics"):
     st.markdown(
         paragraph(
-            "**ROAS** shows how much revenue you generate for each euro spent. A ROAS of 2.0x means that every €1 spent brought back €2 in revenue.",
-            "**CAC** shows how much it costs to acquire one customer. A lower CAC is usually better, as long as the quality of customers stays the same.",
-            "**CPL** shows how much it costs to generate one lead. This is useful when leads do not become customers immediately.",
-            "**CTR** shows how often people click after seeing an ad. It helps you understand whether the creative and targeting are attracting attention.",
-            "**Conversion rate** shows how many clicks become sales. If people click but do not buy, the landing page, offer, or audience quality may need review.",
-            "The alerts focus on how performance is changing over time, not only whether a number looks good today."
+            "**ROAS** shows how much revenue you generate for each euro spent.",
+            "**CAC** shows how much it costs to acquire one customer.",
+            "**CPL** shows how much it costs to generate one lead.",
+            "**CTR** shows how often people click after seeing an ad.",
+            "**Conversion rate** shows how many clicks become sales."
         )
     )
 
 
-# ── File upload ──────────────────────────────────────────────────────────────
+# ── Upload ───────────────────────────────────────────────────────────────────
 
 uploaded_file = st.file_uploader("Upload daily marketing CSV", type=["csv"])
 
 st.markdown(
-    paragraph(
-        "Your CSV should contain one row per day, channel, and campaign.",
-        "Required columns: `date`, `channel`, `campaign`, `spend`, `impressions`, `clicks`, `leads`, `sales`, `revenue`."
-    )
+    "Required columns: `date`, `channel`, `campaign`, `spend`, "
+    "`impressions`, `clicks`, `leads`, `sales`, `revenue`."
 )
 
 if not uploaded_file:
@@ -124,7 +221,7 @@ if df["date"].isna().all():
     st.stop()
 
 
-# ── Sidebar filters ──────────────────────────────────────────────────────────
+# ── Sidebar ──────────────────────────────────────────────────────────────────
 
 st.sidebar.header("Filters")
 
@@ -153,17 +250,17 @@ if selected_channels:
     df = df[df["channel"].isin(selected_channels)]
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("Monthly budget")
+st.sidebar.subheader("Budget context")
 
 today_input = st.sidebar.date_input(
-    "Today's date for projection",
+    "Today’s date",
     value=max_date,
     min_value=min_date,
     max_value=max_date + timedelta(days=31),
 )
 
 monthly_budget = st.sidebar.number_input(
-    "Total monthly budget (€)",
+    "Monthly budget (€)",
     min_value=0,
     value=45000,
     step=1000
@@ -174,7 +271,7 @@ if df.empty:
     st.stop()
 
 
-# ── Row-level metrics ────────────────────────────────────────────────────────
+# ── Metrics ──────────────────────────────────────────────────────────────────
 
 df["roas"] = safe_div(df["revenue"], df["spend"])
 df["cac"] = safe_div(df["spend"], df["sales"])
@@ -184,7 +281,7 @@ df["conversion_rate"] = safe_div(df["sales"], df["clicks"])
 df = df.replace([np.inf, -np.inf], np.nan)
 
 
-# ── Rolling trend: last 7 days vs previous 7 days ────────────────────────────
+# ── Weekly trend ─────────────────────────────────────────────────────────────
 
 data_max = df["date"].max()
 cutoff_mid = data_max - timedelta(days=7)
@@ -215,6 +312,7 @@ def window_summary(frame):
 curr = window_summary(df_curr).add_suffix("_curr").rename(
     columns={"channel_curr": "channel"}
 )
+
 prev = window_summary(df_prev).add_suffix("_prev").rename(
     columns={"channel_prev": "channel"}
 )
@@ -238,8 +336,22 @@ trend["spend_delta_pct"] = safe_div(
 
 trend = trend.replace([np.inf, -np.inf], np.nan)
 
+trend["signal"] = trend.apply(signal_label, axis=1)
+trend["signal_note"] = trend.apply(signal_note, axis=1)
 
-# ── End-of-month projection ─────────────────────────────────────────────────
+signal_order = {
+    "Efficiency weakening": 0,
+    "Acquisition cost rising": 1,
+    "Slight decline": 2,
+    "Stable": 3,
+    "Not enough data": 4,
+}
+
+trend["_sort"] = trend["signal"].map(signal_order)
+trend = trend.sort_values("_sort").drop(columns="_sort")
+
+
+# ── Month context ────────────────────────────────────────────────────────────
 
 today_dt = pd.Timestamp(today_input)
 month_start = today_dt.replace(day=1)
@@ -261,114 +373,6 @@ projected_revenue = revenue_to_date + daily_revenue_rate * days_remaining
 projected_roas = projected_revenue / projected_spend if projected_spend else np.nan
 
 budget_variance = projected_spend - monthly_budget
-budget_variance_pct = (
-    budget_variance / monthly_budget * 100
-    if monthly_budget
-    else np.nan
-)
-
-
-# ── Alert logic ──────────────────────────────────────────────────────────────
-
-ROAS_URGENT = -40
-ROAS_ACT = -25
-CAC_ACT = 30
-
-
-def alert_level(row):
-    rd = row.get("roas_delta_pct", np.nan)
-    cd = row.get("cac_delta_pct", np.nan)
-
-    if pd.isna(rd) and pd.isna(cd):
-        return "insufficient_data"
-
-    if not pd.isna(rd) and rd <= ROAS_URGENT:
-        return "urgent"
-
-    if (not pd.isna(rd) and rd <= ROAS_ACT) or (
-        not pd.isna(cd) and cd >= CAC_ACT * 1.5
-    ):
-        return "act"
-
-    if (not pd.isna(rd) and rd <= -10) or (
-        not pd.isna(cd) and cd >= CAC_ACT
-    ):
-        return "watch"
-
-    return "stable"
-
-
-def alert_text(row):
-    ch = row["channel"]
-    rd = row.get("roas_delta_pct", np.nan)
-    cd = row.get("cac_delta_pct", np.nan)
-    roas_curr = row.get("roas_curr", np.nan)
-    roas_prev = row.get("roas_prev", np.nan)
-    cac_curr = row.get("cac_curr", np.nan)
-    daily_spend = row.get("daily_spend_curr", np.nan)
-
-    level = alert_level(row)
-
-    if level == "urgent":
-        potential_risk = daily_spend * days_remaining if not pd.isna(daily_spend) else np.nan
-
-        return paragraph(
-            f"Performance has deteriorated quickly for {ch}.",
-            "Over the past week, this channel has started generating much less revenue for each euro spent.",
-            f"ROAS moved from {fmt_x(roas_prev)} to {fmt_x(roas_curr)}, which is a drop of {abs(rd):.0f}%.",
-            f"If this continues, around {fmt_eur(potential_risk)} could be spent under these weaker conditions before the end of the month.",
-            "Recommendation: reduce spend immediately and investigate creatives, targeting, or tracking."
-        )
-
-    if level == "act":
-        if not pd.isna(rd) and rd <= ROAS_ACT:
-            return paragraph(
-                f"Results are weakening for {ch}.",
-                "The channel is still worth reviewing carefully because efficiency has clearly declined compared with last week.",
-                f"ROAS moved from {fmt_x(roas_prev)} to {fmt_x(roas_curr)}, which is {abs(rd):.0f}% lower.",
-                "Recommendation: review the weaker campaigns within the next few days and consider reallocating budget to stronger performers."
-            )
-
-        return paragraph(
-            f"Customer acquisition is becoming more expensive for {ch}.",
-            f"CAC increased to {fmt_eur(cac_curr)}, which is {cd:.0f}% higher than last week.",
-            "This means each new customer is costing more to acquire.",
-            "Recommendation: refine targeting, refresh creatives, or check whether lower-quality traffic is entering the funnel."
-        )
-
-    if level == "watch":
-        return paragraph(
-            f"There is a slight decline for {ch}, but nothing critical yet.",
-            f"ROAS is currently {fmt_x(roas_curr)}, which is {rd:+.0f}% compared with last week.",
-            "No immediate action is required, but this channel should be monitored over the next few days."
-        )
-
-    if level == "stable":
-        return paragraph(
-            f"{ch} is performing consistently.",
-            f"ROAS is currently {fmt_x(roas_curr)}, with a change of {rd:+.0f}% compared with last week.",
-            "No action is needed at the moment."
-        )
-
-    return paragraph(
-        f"There is not enough previous data to evaluate {ch} properly yet.",
-        "Once there are at least two comparable weekly periods, the app will be able to provide a clearer trend."
-    )
-
-
-trend["alert_level"] = trend.apply(alert_level, axis=1)
-trend["alert_text"] = trend.apply(alert_text, axis=1)
-
-level_order = {
-    "urgent": 0,
-    "act": 1,
-    "watch": 2,
-    "stable": 3,
-    "insufficient_data": 4,
-}
-
-trend["_sort"] = trend["alert_level"].map(level_order)
-trend = trend.sort_values("_sort").drop(columns="_sort")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -381,66 +385,108 @@ st.subheader("Executive summary")
 
 st.markdown(
     paragraph(
-        "Here is a simple overview of how the month is progressing so far.",
-        "The goal is to understand how much has been spent, what has been generated in return, and where things are likely to land by the end of the month."
+        "This gives a quick view of total spend, total revenue, and current efficiency for the selected period."
     )
 )
+
+total_spend = df["spend"].sum()
+total_revenue = df["revenue"].sum()
+total_sales = df["sales"].sum()
+overall_roas = total_revenue / total_spend if total_spend else np.nan
+overall_cac = total_spend / total_sales if total_sales else np.nan
 
 c1, c2, c3, c4 = st.columns(4)
 
-c1.metric("Spend so far", fmt_eur(spent_to_date))
-c2.metric("Revenue so far", fmt_eur(revenue_to_date))
-
-c3.metric(
-    "Estimated end-of-month spend",
-    fmt_eur(projected_spend),
-    delta=f"{fmt_eur(abs(budget_variance))} {'above' if budget_variance > 0 else 'below'} budget",
-    delta_color="inverse" if budget_variance > 0 else "normal",
-)
-
-c4.metric("Estimated ROAS at month end", fmt_x(projected_roas))
+c1.metric("Spend", fmt_eur(total_spend))
+c2.metric("Revenue", fmt_eur(total_revenue))
+c3.metric("ROAS", fmt_x(overall_roas))
+c4.metric("CAC", fmt_eur(overall_cac))
 
 
-# ── Alerts ──────────────────────────────────────────────────────────────────
+# ── Budget context, no graph ─────────────────────────────────────────────────
 
-st.subheader("What needs attention")
+st.subheader("Budget context")
+
+budget_col1, budget_col2, budget_col3 = st.columns(3)
+
+budget_col1.metric("Monthly budget", fmt_eur(monthly_budget))
+budget_col2.metric("Spent this month", fmt_eur(spent_to_date))
+
+if days_remaining > 0:
+    budget_col3.metric(
+        "Projected month-end spend",
+        fmt_eur(projected_spend),
+        delta=f"{fmt_eur(abs(budget_variance))} {'above' if budget_variance > 0 else 'below'} budget",
+        delta_color="inverse" if budget_variance > 0 else "normal",
+    )
+else:
+    budget_col3.metric(
+        "Budget remaining",
+        fmt_eur(monthly_budget - spent_to_date)
+    )
+
+if days_remaining > 0:
+    if projected_spend > monthly_budget:
+        st.info(
+            f"At the current pace, spend may finish about {fmt_eur(abs(budget_variance))} above budget."
+        )
+    else:
+        st.info(
+            f"At the current pace, spend may finish about {fmt_eur(abs(budget_variance))} below budget."
+        )
+else:
+    st.info("The selected date is at the end of the month, so this section shows the final budget position rather than a projection.")
+
+
+# ── Signals, clean UI cards ──────────────────────────────────────────────────
+
+st.subheader("Recent channel movement")
 
 st.markdown(
     paragraph(
-        "This section reads the recent trend for each channel and turns it into a plain-language recommendation.",
-        "It compares the most recent 7 days with the 7 days before that, so the focus is on direction, not just the current number."
+        "This section compares the most recent 7 days with the 7 days before that.",
+        "It is meant to highlight movement, not give strict instructions."
     )
 )
 
-ALERT_FN = {
-    "urgent": st.error,
-    "act": st.warning,
-    "watch": st.info,
-    "stable": st.success,
-    "insufficient_data": st.info,
-}
-
-ALERT_PREFIX = {
-    "urgent": "🔴 Urgent",
-    "act": "🟡 Review soon",
-    "watch": "🔵 Watch",
-    "stable": "🟢 Stable",
-    "insufficient_data": "⚪ Not enough data",
-}
-
 for _, row in trend.iterrows():
-    lvl = row["alert_level"]
-    ALERT_FN[lvl](f"**{ALERT_PREFIX[lvl]}: {row['channel']}**\n\n{row['alert_text']}")
+    st.markdown(
+        f"""
+        <div class="signal-card">
+            <div class="signal-title">{row["channel"]}</div>
+            <div class="signal-meta">{row["signal"]}</div>
+            <div class="signal-note">{row["signal_note"]}</div>
+            <div class="signal-grid">
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS previous 7 days</div>
+                    <div class="mini-value">{fmt_x(row.get("roas_prev", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS recent 7 days</div>
+                    <div class="mini-value">{fmt_x(row.get("roas_curr", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">ROAS change</div>
+                    <div class="mini-value">{pct_text(row.get("roas_delta_pct", np.nan))}</div>
+                </div>
+                <div class="mini-metric">
+                    <div class="mini-label">CAC change</div>
+                    <div class="mini-value">{pct_text(row.get("cac_delta_pct", np.nan))}</div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
-# ── ROAS trend chart ────────────────────────────────────────────────────────
+# ── Weekly ROAS chart ────────────────────────────────────────────────────────
 
-st.subheader("How performance changed over the last two weeks")
+st.subheader("ROAS comparison by channel")
 
 st.markdown(
     paragraph(
-        "This chart compares ROAS from the most recent 7 days with the 7 days before that.",
-        "It helps show whether each channel is becoming more or less efficient."
+        "This chart gives the visual version of the weekly comparison above."
     )
 )
 
@@ -456,7 +502,7 @@ fig_trend.add_trace(go.Bar(
 ))
 
 fig_trend.add_trace(go.Bar(
-    name="Most recent 7 days",
+    name="Recent 7 days",
     x=trend["channel"],
     y=trend["roas_curr"].round(2),
     marker_color="#185FA5",
@@ -467,6 +513,8 @@ fig_trend.add_trace(go.Bar(
 fig_trend.update_layout(
     barmode="group",
     yaxis_title="ROAS",
+    height=360,
+    margin=dict(t=40, b=20),
     legend=dict(
         orientation="h",
         yanchor="bottom",
@@ -474,38 +522,35 @@ fig_trend.update_layout(
         xanchor="right",
         x=1,
     ),
-    height=360,
-    margin=dict(t=40, b=20),
 )
 
 st.plotly_chart(fig_trend, use_container_width=True)
 
 
-# ── Channel trend detail ────────────────────────────────────────────────────
+# ── Channel trend table ──────────────────────────────────────────────────────
 
-st.subheader("How each channel is evolving")
-
-st.markdown(
-    paragraph(
-        "The table below gives the detailed numbers behind the alerts.",
-        "Use it to understand whether changes are coming from ROAS, CAC, or spend levels."
-    )
-)
+st.subheader("Channel details")
 
 display_trend = trend[[
-    "channel", "roas_prev", "roas_curr", "roas_delta_pct",
-    "cac_curr", "cac_delta_pct", "daily_spend_curr", "alert_level"
+    "channel",
+    "signal",
+    "roas_prev",
+    "roas_curr",
+    "roas_delta_pct",
+    "cac_curr",
+    "cac_delta_pct",
+    "daily_spend_curr",
 ]].copy()
 
 display_trend.columns = [
     "Channel",
+    "Signal",
     "ROAS previous 7 days",
-    "ROAS most recent 7 days",
+    "ROAS recent 7 days",
     "ROAS change",
-    "CAC most recent 7 days",
+    "CAC recent 7 days",
     "CAC change",
     "Average daily spend",
-    "Alert level",
 ]
 
 
@@ -513,11 +558,11 @@ def color_delta(val):
     if pd.isna(val):
         return ""
     if val <= -25:
-        return "color: #A32D2D; font-weight: 500"
+        return "color: #A32D2D; font-weight: 600"
     if val <= -10:
-        return "color: #854F0B"
+        return "color: #8A5A00; font-weight: 500"
     if val >= 25:
-        return "color: #3B6D11; font-weight: 500"
+        return "color: #247A3E; font-weight: 600"
     return ""
 
 
@@ -526,10 +571,10 @@ styled_trend = (
     .map(color_delta, subset=["ROAS change"])
     .format({
         "ROAS previous 7 days": lambda v: fmt_x(v),
-        "ROAS most recent 7 days": lambda v: fmt_x(v),
-        "ROAS change": lambda v: f"{v:+.1f}%" if not pd.isna(v) else "N/A",
-        "CAC most recent 7 days": lambda v: fmt_eur(v),
-        "CAC change": lambda v: f"{v:+.1f}%" if not pd.isna(v) else "N/A",
+        "ROAS recent 7 days": lambda v: fmt_x(v),
+        "ROAS change": lambda v: pct_text(v),
+        "CAC recent 7 days": lambda v: fmt_eur(v),
+        "CAC change": lambda v: pct_text(v),
         "Average daily spend": lambda v: fmt_eur(v),
     })
 )
@@ -537,81 +582,9 @@ styled_trend = (
 st.dataframe(styled_trend, use_container_width=True)
 
 
-# ── Budget projection ───────────────────────────────────────────────────────
+# ── Daily ROAS ───────────────────────────────────────────────────────────────
 
-st.subheader("Where this month is likely to land")
-
-st.markdown(
-    paragraph(
-        "This projection estimates where spend may finish by the end of the month if the current pace continues.",
-        "It is not a forecast of what must happen. It is a simple way to see whether the current daily spend rate is aligned with the monthly budget."
-    )
-)
-
-fig_eom = go.Figure()
-
-fig_eom.add_trace(go.Bar(
-    name="Spent so far",
-    x=["Budget projection"],
-    y=[spent_to_date],
-    marker_color="#185FA5",
-    text=[fmt_eur(spent_to_date)],
-    textposition="inside",
-))
-
-fig_eom.add_trace(go.Bar(
-    name="Estimated remaining spend",
-    x=["Budget projection"],
-    y=[max(0, projected_spend - spent_to_date)],
-    marker_color="#E24B4A" if projected_spend > monthly_budget else "#85B7EB",
-    text=[fmt_eur(max(0, projected_spend - spent_to_date))],
-    textposition="inside",
-))
-
-fig_eom.add_hline(
-    y=monthly_budget,
-    line_dash="dash",
-    line_color="#888780",
-    annotation_text=f"Budget: {fmt_eur(monthly_budget)}",
-    annotation_position="top right",
-)
-
-fig_eom.update_layout(
-    barmode="stack",
-    yaxis_title="Spend (€)",
-    height=300,
-    margin=dict(t=40, b=20),
-    showlegend=True,
-    legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1.02,
-        xanchor="right",
-        x=1,
-    ),
-)
-
-st.plotly_chart(fig_eom, use_container_width=True)
-
-st.caption(
-    paragraph(
-        f"This projection is based on {days_elapsed} days of data so far.",
-        f"There are {days_remaining} days left in the month.",
-        f"At the current pace, daily spend is around {fmt_eur(daily_spend_rate)}."
-    )
-)
-
-
-# ── Daily ROAS by channel ───────────────────────────────────────────────────
-
-st.subheader("How efficiency changes day by day")
-
-st.markdown(
-    paragraph(
-        "ROAS can move from day to day, especially when spend or sales volume is low.",
-        "This chart helps you see whether a channel is consistently strong, slowly declining, or moving unpredictably."
-    )
-)
+st.subheader("Daily ROAS by channel")
 
 daily_ch = (
     df.groupby(["date", "channel"])
@@ -654,16 +627,9 @@ fig_ts.update_layout(
 st.plotly_chart(fig_ts, use_container_width=True)
 
 
-# ── Daily spend by channel ──────────────────────────────────────────────────
+# ── Daily spend ──────────────────────────────────────────────────────────────
 
-st.subheader("How budget is being distributed over time")
-
-st.markdown(
-    paragraph(
-        "This chart shows where money is being spent each day.",
-        "It is useful for spotting whether budget has shifted toward a channel that is improving, or whether spend is increasing while efficiency is falling."
-    )
-)
+st.subheader("Daily spend by channel")
 
 daily_spend_ch = (
     df.groupby(["date", "channel"])
@@ -694,16 +660,9 @@ fig_spend.update_layout(
 st.plotly_chart(fig_spend, use_container_width=True)
 
 
-# ── Overall channel performance ─────────────────────────────────────────────
+# ── Overall channel performance ──────────────────────────────────────────────
 
 st.subheader("Overall channel performance")
-
-st.markdown(
-    paragraph(
-        "This table summarizes performance across the full selected period.",
-        "It is useful for comparing channels at a high level, but it should be read together with the trend section because a strong historical average can hide a recent decline."
-    )
-)
 
 channel_summary = df.groupby("channel").agg(
     spend=("spend", "sum"),
@@ -743,16 +702,9 @@ styled_summary = (
 st.dataframe(styled_summary, use_container_width=True)
 
 
-# ── Campaign drill-down ─────────────────────────────────────────────────────
+# ── Campaign drill-down ──────────────────────────────────────────────────────
 
 st.subheader("Campaign drill-down")
-
-st.markdown(
-    paragraph(
-        "This section lets you look inside one channel at a time.",
-        "The goal is to see which campaigns are carrying performance and which ones may need review."
-    )
-)
 
 filtered_channels = sorted(df["channel"].dropna().unique())
 selected_channel = st.selectbox("Select a channel to inspect", filtered_channels)
@@ -783,8 +735,8 @@ if not campaign_df.empty:
 
     st.markdown(
         paragraph(
-            f"In {selected_channel}, the strongest campaign by ROAS is **{best['campaign']}** at **{fmt_x(best['roas'])}**.",
-            f"The campaign most worth reviewing is **{worst['campaign']}** at **{fmt_x(worst['roas'])}**."
+            f"Strongest campaign in **{selected_channel}**: **{best['campaign']}**, with {fmt_x(best['roas'])} ROAS.",
+            f"Lowest ROAS campaign in **{selected_channel}**: **{worst['campaign']}**, with {fmt_x(worst['roas'])} ROAS."
         )
     )
 
