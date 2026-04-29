@@ -58,8 +58,6 @@ def signal_label(row):
 def signal_note(row):
     label = row["signal"]
     ch = row["channel"]
-    rd = row.get("roas_delta_pct", np.nan)
-    cd = row.get("cac_delta_pct", np.nan)
 
     if label == "Efficiency weakening":
         return f"{ch} is generating less revenue per euro spent than last week."
@@ -81,8 +79,45 @@ def signal_note(row):
 st.markdown(
     """
     <style>
-    .main-block {
-        padding: 1rem 0 0.5rem 0;
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+        margin-bottom: 32px;
+    }
+
+    .summary-card {
+        border: 1px solid #E6E8EF;
+        border-radius: 18px;
+        padding: 20px;
+        background: #FFFFFF;
+    }
+
+    .summary-label {
+        font-size: 13px;
+        color: #71768A;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        font-size: 30px;
+        font-weight: 750;
+        color: #2F3140;
+        margin-bottom: 6px;
+    }
+
+    .summary-note {
+        font-size: 13px;
+        color: #8A8FA3;
+    }
+
+    .budget-strip {
+        border: 1px solid #E6E8EF;
+        border-radius: 18px;
+        padding: 22px;
+        background: #F8F9FC;
+        margin-bottom: 34px;
     }
 
     .signal-card {
@@ -358,21 +393,12 @@ month_start = today_dt.replace(day=1)
 month_end = month_start + pd.offsets.MonthEnd(0)
 
 days_elapsed = max(1, (today_dt - month_start).days + 1)
-days_remaining = max(0, (month_end - today_dt).days)
 
 month_df = df[df["date"] >= month_start]
 
 spent_to_date = month_df["spend"].sum()
-revenue_to_date = month_df["revenue"].sum()
-
 daily_spend_rate = spent_to_date / days_elapsed
-daily_revenue_rate = revenue_to_date / days_elapsed
-
-projected_spend = spent_to_date + daily_spend_rate * days_remaining
-projected_revenue = revenue_to_date + daily_revenue_rate * days_remaining
-projected_roas = projected_revenue / projected_spend if projected_spend else np.nan
-
-budget_variance = projected_spend - monthly_budget
+budget_remaining = monthly_budget - spent_to_date
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -381,61 +407,76 @@ budget_variance = projected_spend - monthly_budget
 
 # ── Executive summary ────────────────────────────────────────────────────────
 
-st.subheader("Executive summary")
-
-st.markdown(
-    paragraph(
-        "This gives a quick view of total spend, total revenue, and current efficiency for the selected period."
-    )
-)
-
 total_spend = df["spend"].sum()
 total_revenue = df["revenue"].sum()
 total_sales = df["sales"].sum()
 overall_roas = total_revenue / total_spend if total_spend else np.nan
 overall_cac = total_spend / total_sales if total_sales else np.nan
 
-c1, c2, c3, c4 = st.columns(4)
+st.subheader("Executive summary")
 
-c1.metric("Spend", fmt_eur(total_spend))
-c2.metric("Revenue", fmt_eur(total_revenue))
-c3.metric("ROAS", fmt_x(overall_roas))
-c4.metric("CAC", fmt_eur(overall_cac))
+st.markdown(
+    f"""
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Spend</div>
+            <div class="summary-value">{fmt_eur(total_spend)}</div>
+            <div class="summary-note">Total media spend</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Revenue</div>
+            <div class="summary-value">{fmt_eur(total_revenue)}</div>
+            <div class="summary-note">Revenue generated</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">ROAS</div>
+            <div class="summary-value">{fmt_x(overall_roas)}</div>
+            <div class="summary-note">Revenue per euro spent</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">CAC</div>
+            <div class="summary-value">{fmt_eur(overall_cac)}</div>
+            <div class="summary-note">Cost per customer</div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ── Budget context, no graph ─────────────────────────────────────────────────
 
 st.subheader("Budget context")
 
-budget_col1, budget_col2, budget_col3 = st.columns(3)
-
-budget_col1.metric("Monthly budget", fmt_eur(monthly_budget))
-budget_col2.metric("Spent this month", fmt_eur(spent_to_date))
-
-if days_remaining > 0:
-    budget_col3.metric(
-        "Projected month-end spend",
-        fmt_eur(projected_spend),
-        delta=f"{fmt_eur(abs(budget_variance))} {'above' if budget_variance > 0 else 'below'} budget",
-        delta_color="inverse" if budget_variance > 0 else "normal",
-    )
-else:
-    budget_col3.metric(
-        "Budget remaining",
-        fmt_eur(monthly_budget - spent_to_date)
-    )
-
-if days_remaining > 0:
-    if projected_spend > monthly_budget:
-        st.info(
-            f"At the current pace, spend may finish about {fmt_eur(abs(budget_variance))} above budget."
-        )
-    else:
-        st.info(
-            f"At the current pace, spend may finish about {fmt_eur(abs(budget_variance))} below budget."
-        )
-else:
-    st.info("The selected date is at the end of the month, so this section shows the final budget position rather than a projection.")
+st.markdown(
+    f"""
+    <div class="budget-strip">
+        <div class="summary-grid" style="margin: 0;">
+            <div class="summary-card">
+                <div class="summary-label">Monthly budget</div>
+                <div class="summary-value">{fmt_eur(monthly_budget)}</div>
+                <div class="summary-note">Planned spend</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Spent this month</div>
+                <div class="summary-value">{fmt_eur(spent_to_date)}</div>
+                <div class="summary-note">Actual spend so far</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Budget remaining</div>
+                <div class="summary-value">{fmt_eur(budget_remaining)}</div>
+                <div class="summary-note">Still available</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Daily pace</div>
+                <div class="summary-value">{fmt_eur(daily_spend_rate)}</div>
+                <div class="summary-note">Average spend per day</div>
+            </div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # ── Signals, clean UI cards ──────────────────────────────────────────────────
@@ -483,12 +524,6 @@ for _, row in trend.iterrows():
 # ── Weekly ROAS chart ────────────────────────────────────────────────────────
 
 st.subheader("ROAS comparison by channel")
-
-st.markdown(
-    paragraph(
-        "This chart gives the visual version of the weekly comparison above."
-    )
-)
 
 fig_trend = go.Figure()
 
@@ -779,3 +814,4 @@ fig_camp = px.line(
 fig_camp.update_layout(height=320, margin=dict(t=40, b=20))
 
 st.plotly_chart(fig_camp, use_container_width=True)
+
