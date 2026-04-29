@@ -376,7 +376,7 @@ def color_delta(val):
 
 styled_trend = (
     display_trend.style
-    .map(color_delta, subset=["ROAS Δ %"])
+    .applymap(color_delta, subset=["ROAS Δ %"])
     .format({
         "ROAS prior 7d": lambda v: fmt_x(v),
         "ROAS last 7d":  lambda v: fmt_x(v),
@@ -600,4 +600,3 @@ fig_camp = px.line(
 )
 fig_camp.update_layout(height=320, margin=dict(t=40, b=20))
 st.plotly_chart(fig_camp, use_container_width=True)
-
