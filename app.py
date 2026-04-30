@@ -417,13 +417,28 @@ uploaded_file = st.file_uploader("Choose your CSV file", type=["csv"])
 
 if not uploaded_file:
     st.info("Upload a CSV file to begin. Don't have one? Download the sample below to see the expected format.")
-    with open("/mnt/user-data/outputs/sample_standard.csv", "rb") as f:
-        st.download_button(
-            label="Download sample CSV",
-            data=f.read(),
-            file_name="sample_marketing_data.csv",
-            mime="text/csv",
-        )
+    # Generate sample CSV in memory — no file system dependency
+    import io as _io
+    sample_lines = [
+        "date,channel,campaign,spend,impressions,clicks,leads,sales,revenue",
+        "2026-04-01,Google Ads,Brand Search,420,28000,1680,84,17,1764",
+        "2026-04-01,Meta Ads,Retargeting,380,32000,576,29,6,912",
+        "2026-04-01,LinkedIn Ads,B2B Leads,310,18000,144,18,3,589",
+        "2026-04-01,Email,Newsletter,60,12000,2520,126,25,1620",
+        "2026-04-01,Display,Awareness,140,11900,48,2,0,0",
+        "2026-04-02,Google Ads,Brand Search,415,27500,1650,82,16,1743",
+        "2026-04-02,Meta Ads,Retargeting,375,31500,567,28,6,900",
+        "2026-04-02,LinkedIn Ads,B2B Leads,308,17800,142,17,3,585",
+        "2026-04-02,Email,Newsletter,58,11800,2478,124,25,1595",
+        "2026-04-02,Display,Awareness,138,11700,47,2,0,0",
+    ]
+    sample_csv = _io.BytesIO("\n".join(sample_lines).encode("utf-8"))
+    st.download_button(
+        label="Download sample CSV",
+        data=sample_csv,
+        file_name="sample_marketing_data.csv",
+        mime="text/csv",
+    )
     st.stop()
 
 
