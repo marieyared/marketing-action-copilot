@@ -76,23 +76,23 @@ def diagnose(row):
 
     # CTR dropped sharply -> audience has seen these ads too many times
     if not pd.isna(ctr) and ctr <= -20:
-        return "CTR dropped sharply while spend held steady — likely creative fatigue. Rotate your creatives."
+        return "CTR dropped sharply while spend held steady - likely creative fatigue. Rotate your creatives."
 
     # CTR stable but conversion rate dropped -> post-click problem
     if not pd.isna(ctr) and ctr > -10 and not pd.isna(cvr) and cvr <= -20:
-        return "People are still clicking but fewer are converting — check your landing page or offer, not the ad itself."
+        return "People are still clicking but fewer are converting - check your landing page or offer, not the ad itself."
 
     # CPM spiked -> auction pressure from competitors
     if not pd.isna(cpm) and cpm >= 25:
-        return "Cost per impression rose significantly — a competitor may have increased bids in your auction."
+        return "Cost per impression rose significantly - a competitor may have increased bids in your auction."
 
     # CAC rising but ROAS only slightly down -> lead quality issue
     if sig == "Acquisition cost rising" and not pd.isna(rd) and rd > -15:
-        return "Spend is holding but fewer leads are converting to sales — likely a lead quality or follow-up issue."
+        return "Spend is holding but fewer leads are converting to sales - likely a lead quality or follow-up issue."
 
     # Generic fallback for confirmed decline with no clear signal
     if not pd.isna(rd) and rd <= -10:
-        return "Cause unclear from this data alone — check platform-level frequency and audience overlap."
+        return "Cause unclear from this data alone - check platform-level frequency and audience overlap."
 
     return ""
 
@@ -166,7 +166,7 @@ def build_so_what(trend, projected_spend, monthly_budget):
     elif not rising.empty:
         names = " and ".join(rising["channel"].tolist())
         parts.append(
-            f"{names} {'is' if len(rising) == 1 else 'are'} showing rising acquisition costs — "
+            f"{names} {'is' if len(rising) == 1 else 'are'} showing rising acquisition costs -"
             f"worth reviewing before end of week."
         )
     elif not slight.empty:
@@ -180,7 +180,7 @@ def build_so_what(trend, projected_spend, monthly_budget):
         best = stable.sort_values("roas_curr", ascending=False).iloc[0]
         parts.append(
             f"{best['channel']} remains your strongest channel at "
-            f"{fmt_x(best['roas_curr'])} ROAS — a candidate to absorb reallocated budget."
+            f"{fmt_x(best['roas_curr'])} ROAS - a candidate to absorb reallocated budget."
         )
 
     return " ".join(parts)
@@ -744,11 +744,11 @@ if TREND_READY and not trend.empty:
 
     with st.expander("What do these metrics mean?"):
         st.markdown(
-            "**ROAS** — revenue generated per euro spent. Higher is better.\n\n"
-            "**CAC** — cost to acquire one paying customer. Lower is better.\n\n"
-            "**CTR** — share of people who clicked after seeing the ad. Higher is better.\n\n"
-            "**Conversion rate** — share of clicks that became sales. Higher is better.\n\n"
-            "**CPM** — cost per 1,000 impressions. A rising CPM can signal auction pressure."
+            "**ROAS** - revenue generated per euro spent. Higher is better.\n\n"
+            "**CAC** - cost to acquire one paying customer. Lower is better.\n\n"
+            "**CTR** - share of people who clicked after seeing the ad. Higher is better.\n\n"
+            "**Conversion rate** - share of clicks that became sales. Higher is better.\n\n"
+            "**CPM** - cost per 1,000 impressions. A rising CPM can signal auction pressure."
         )
 
     css_map = {
@@ -763,11 +763,13 @@ if TREND_READY and not trend.empty:
         card_cls, badge_cls = css_map.get(row["signal"], ("nodata", "badge-nodata"))
         diagnosis_html = ""
         if row.get("diagnosis", ""):
-            diagnosis_html = f"""
-            <div class="signal-why">
-                <div class="signal-why-label">Possible cause</div>
-                {row['diagnosis']}
-            </div>"""
+            diag_text = str(row["diagnosis"]).replace("\u2014", "-").replace("\u2013", "-")
+            diagnosis_html = (
+                '<div class="signal-why">'
+                '<div class="signal-why-label">Possible cause</div>'
+                + diag_text +
+                '</div>'
+            )
 
         st.markdown(f"""
         <div class="signal-card {card_cls}">
@@ -1039,7 +1041,7 @@ st.plotly_chart(fig_camp, use_container_width=True)
 st.markdown("---")
 st.subheader("Export this report")
 st.markdown(
-    "Download a PDF summary of the signals and budget context — "
+    "Download a PDF summary of the signals and budget context - "
     "useful for sharing in a Monday morning message or attaching to a client report."
 )
 
