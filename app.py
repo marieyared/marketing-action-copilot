@@ -761,42 +761,37 @@ if TREND_READY and not trend.empty:
 
     for _, row in trend.iterrows():
         card_cls, badge_cls = css_map.get(row["signal"], ("nodata", "badge-nodata"))
-        diagnosis_html = ""
-        if row.get("diagnosis", ""):
-            diag_text = str(row["diagnosis"]).replace("\u2014", "-").replace("\u2013", "-")
-            diagnosis_html = (
+
+        diag_block = ""
+        raw_diag = str(row.get("diagnosis", "") or "")
+        if raw_diag:
+            raw_diag = raw_diag.replace("—", "-").replace("–", "-").replace('"', "&quot;")
+            diag_block = (
                 '<div class="signal-why">'
-                '<div class="signal-why-label">Possible cause</div>'
-                + diag_text +
-                '</div>'
+                '<span class="signal-why-label">Possible cause &nbsp;</span>'
+                + raw_diag
+                + '</div>'
             )
 
-        st.markdown(f"""
-        <div class="signal-card {card_cls}">
-            <div class="signal-title">{row["channel"]}</div>
-            <span class="signal-badge {badge_cls}">{row["signal"]}</span>
-            <div class="signal-what">{row["signal_note"]}</div>
-            {diagnosis_html}
-            <div class="signal-grid">
-                <div class="mini-metric">
-                    <div class="mini-label">ROAS previous 7d</div>
-                    <div class="mini-value">{fmt_x(row.get("roas_prev", np.nan))}</div>
-                </div>
-                <div class="mini-metric">
-                    <div class="mini-label">ROAS last 7d</div>
-                    <div class="mini-value">{fmt_x(row.get("roas_curr", np.nan))}</div>
-                </div>
-                <div class="mini-metric">
-                    <div class="mini-label">CTR change</div>
-                    <div class="mini-value">{pct_text(row.get("ctr_delta_pct", np.nan))}</div>
-                </div>
-                <div class="mini-metric">
-                    <div class="mini-label">Conv. rate change</div>
-                    <div class="mini-value">{pct_text(row.get("cvr_delta_pct", np.nan))}</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        html = (
+            '<div class="signal-card ' + card_cls + '">'
+            + '<div class="signal-title">' + str(row["channel"]) + '</div>'
+            + '<span class="signal-badge ' + badge_cls + '">' + str(row["signal"]) + '</span>'
+            + '<div class="signal-what">' + str(row["signal_note"]) + '</div>'
+            + diag_block
+            + '<div class="signal-grid">'
+            + '<div class="mini-metric"><div class="mini-label">ROAS previous 7d</div>'
+            + '<div class="mini-value">' + fmt_x(row.get("roas_prev", np.nan)) + '</div></div>'
+            + '<div class="mini-metric"><div class="mini-label">ROAS last 7d</div>'
+            + '<div class="mini-value">' + fmt_x(row.get("roas_curr", np.nan)) + '</div></div>'
+            + '<div class="mini-metric"><div class="mini-label">CTR change</div>'
+            + '<div class="mini-value">' + pct_text(row.get("ctr_delta_pct", np.nan)) + '</div></div>'
+            + '<div class="mini-metric"><div class="mini-label">Conv. rate change</div>'
+            + '<div class="mini-value">' + pct_text(row.get("cvr_delta_pct", np.nan)) + '</div></div>'
+            + '</div>'
+            + '</div>'
+        )
+        st.markdown(html, unsafe_allow_html=True)
 
     # SECTION 4: ROAS comparison chart
     st.subheader("ROAS by channel: last 7 days vs week before")
